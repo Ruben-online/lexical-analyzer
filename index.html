@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compilador de Nutrias — Analizador Léxico</title>
+  <link rel="stylesheet" href="/static/css/estilos.css">
+</head>
+<body>
+
+  <!-- ── Sidebar ─────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">🦦</span>
+      <div>
+        <div class="brand-name">Vitally</div>
+        <div class="brand-sub">Compilador de Nutrias</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">HERRAMIENTAS</div>
+      <a href="#" class="nav-item active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Analizador Léxico
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-badge">N</div>
+      <div>
+        <div class="user-name">Dra. Nutricionista</div>
+        <div class="user-role">Compiladores — URL</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Contenido principal ──────────────────── -->
+  <main class="main">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Analizador Léxico</h1>
+        <p class="page-sub">Fase 1 — Compilador de Nutrias</p>
+      </div>
+      <button class="btn-primary" onclick="analizar()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Analizar
+      </button>
+    </header>
+
+    <!-- Tarjetas de resumen -->
+    <section class="stats-row" id="stats-row" style="display:none">
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <div>
+          <div class="stat-label">Total tokens</div>
+          <div class="stat-value" id="stat-tokens">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div>
+          <div class="stat-label">Palabras reservadas</div>
+          <div class="stat-value" id="stat-reservadas">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div>
+          <div class="stat-label">Errores léxicos</div>
+          <div class="stat-value" id="stat-errores">0</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" id="stat-estado-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div>
+          <div class="stat-label">Estado</div>
+          <div class="stat-value" id="stat-estado">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Editor + Resultados -->
+    <div class="workspace">
+
+      <!-- Editor izquierdo -->
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Código fuente (.nut)</span>
+          <div class="panel-actions">
+            <button class="btn-ghost" onclick="cargarEjemplo('valido')">Ejemplo válido</button>
+            <button class="btn-ghost" onclick="cargarEjemplo('errores')">Con errores</button>
+            <button class="btn-ghost" onclick="limpiar()">Limpiar</button>
+          </div>
+        </div>
+        <div class="editor-wrapper">
+          <div class="line-numbers" id="line-numbers">1</div>
+          <textarea
+            id="editor"
+            class="editor"
+            placeholder="// Escribe tu código .nut aquí&#10;PACIENTE: Sofia;&#10;EDAD: 25;"
+            spellcheck="false"
+            oninput="sincronizarLineas()"
+            onscroll="sincronizarScroll()"
+          ></textarea>
+        </div>
+      </section>
+
+      <!-- Resultados derecho -->
+      <section class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Tokens encontrados</span>
+          <div class="leyenda">
+            <span class="badge reservada">Reservada</span>
+            <span class="badge identificador">ID</span>
+            <span class="badge numero">Número</span>
+            <span class="badge operador">Operador</span>
+            <span class="badge simbolo">Símbolo</span>
+          </div>
+        </div>
+        <div class="results-wrapper" id="results-wrapper">
+          <div class="empty-state" id="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <p>Escribe código y presiona <strong>Analizar</strong></p>
+          </div>
+          <table class="token-table" id="token-table" style="display:none">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Lexema</th>
+                <th>Token</th>
+                <th>Línea</th>
+                <th>Col</th>
+              </tr>
+            </thead>
+            <tbody id="token-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Panel de errores -->
+    <section class="error-panel" id="error-panel" style="display:none">
+      <div class="panel-header error-header">
+        <span class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Errores léxicos
+        </span>
+        <span class="error-count" id="error-count">0 errores</span>
+      </div>
+      <table class="token-table">
+        <thead>
+          <tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr>
+        </thead>
+        <tbody id="error-body"></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <script src="/static/css/app.js"></script>
+</body>
+</html>
