@@ -15,10 +15,6 @@ CORS(app)   # permite llamadas desde cualquier origen (para react)
 
 _lexer = Lexer()
 
-# ─────────────────────────────────────────────────
-#  Rutas
-# ─────────────────────────────────────────────────
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -44,8 +40,6 @@ def analizar():
         return jsonify({"error": "El campo 'codigo' está vacío"}), 400
 
     tokens, errores = _lexer.tokenizar(codigo)
-
-    # Excluir TK_EOF del conteo visible
     tokens_visibles = [t.to_dict() for t in tokens if t.tipo != "TK_EOF"]
 
     return jsonify({
@@ -58,11 +52,7 @@ def analizar():
         }
     })
 
-
-# ─────────────────────────────────────────────────
-#  Arranque
-# ─────────────────────────────────────────────────
-
+"Modulo de Inicio"
 if __name__ == "__main__":
     print("\n  🦦 Compilador de Nutrias — Servidor Léxico")
     print("  ─────────────────────────────────────────")
