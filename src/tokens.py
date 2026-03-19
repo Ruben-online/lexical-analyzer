@@ -1,8 +1,3 @@
-"""
-tokens.py — Definición central de todos los tokens del lenguaje .nut
-Compilador de Nutrias — Vitally
-"""
-
 from enum import Enum
 
 
@@ -17,6 +12,7 @@ class TipoToken(Enum):
     RECETA      = "RECETA"
     RUTINA      = "RUTINA"
     DIETA       = "DIETA"
+    
 
     # ── Identificadores y literales ──────────
     TK_ID       = "TK_ID"

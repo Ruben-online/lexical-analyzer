@@ -1,18 +1,3 @@
-"""
-lexer.py — Analizador Léxico del Compilador de Nutrias
-Vitally — Fase 1
-
-Tokens reconocidos:
-  Palabras reservadas : PACIENTE EDAD PESO OBJETIVO RESTRICCION ACCION RECETA RUTINA DIETA
-  Identificadores     : [a-zA-ZáéíóúñÁÉÍÓÚÑ][...0-9_]*
-  Números             : enteros [0-9]+  |  decimales [0-9]+\.[0-9]+
-  Cadenas             : "texto libre"
-  Operadores          : :  ==  +  *
-  Simbolos            : ;  <  >
-  Ignorados           : espacios, comentarios // y /* .. */
-  Errores             : cualquier otro caracter o = suelto
-"""
-
 import re
 from dataclasses import dataclass, asdict
 from tokens import TipoToken, PALABRAS_RESERVADAS, categoria_de
@@ -141,7 +126,7 @@ class Lexer:
                     lexema  = lexema,
                     linea   = linea,
                     columna = col,
-                    mensaje = f"Carácter no reconocido: '{lexema}'"
+                    mensaje = f"Caracter no reconocido: '{lexema}'"
                 ))
                 continue
 
