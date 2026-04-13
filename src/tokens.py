@@ -12,6 +12,13 @@ class TipoToken(Enum):
     RECETA      = "RECETA"
     RUTINA      = "RUTINA"
     DIETA       = "DIETA"
+
+    # ── Palabras reservadas (control de flujo) ──────────
+    TK_INICIO    = "TK_INICIO"
+    TK_FIN       = "TK_FIN"
+    TK_SI        = "TK_SI"
+    TK_ENTONCES  = "TK_ENTONCES"
+    TK_IMPRIMIR  = "TK_IMPRIMIR"
     
 
     # ── Identificadores y literales ──────────
@@ -36,8 +43,8 @@ class TipoToken(Enum):
     TK_ERROR       = "TK_ERROR"
 
 
-# Tabla de palabras reservadas (lookup O(1))
 PALABRAS_RESERVADAS: dict[str, TipoToken] = {
+    # existentes...
     "PACIENTE":    TipoToken.PACIENTE,
     "EDAD":        TipoToken.EDAD,
     "PESO":        TipoToken.PESO,
@@ -47,15 +54,28 @@ PALABRAS_RESERVADAS: dict[str, TipoToken] = {
     "RECETA":      TipoToken.RECETA,
     "RUTINA":      TipoToken.RUTINA,
     "DIETA":       TipoToken.DIETA,
+
+    # nuevas
+    "INICIO":    TipoToken.TK_INICIO,
+    "FIN":       TipoToken.TK_FIN,
+    "SI":        TipoToken.TK_SI,
+    "ENTONCES":  TipoToken.TK_ENTONCES,
+    "IMPRIMIR":  TipoToken.TK_IMPRIMIR,
 }
 
 # Categorías para colorear en el frontend
 CATEGORIAS: dict[str, list[TipoToken]] = {
     "reservada": [
-        TipoToken.PACIENTE, TipoToken.EDAD, TipoToken.PESO,
-        TipoToken.OBJETIVO, TipoToken.RESTRICCION, TipoToken.ACCION,
-        TipoToken.RECETA, TipoToken.RUTINA, TipoToken.DIETA,
+    TipoToken.PACIENTE, TipoToken.EDAD, TipoToken.PESO,
+    TipoToken.OBJETIVO, TipoToken.RESTRICCION, TipoToken.ACCION,
+    TipoToken.RECETA, TipoToken.RUTINA, TipoToken.DIETA,
+
+    # nuevas
+    TipoToken.TK_INICIO, TipoToken.TK_FIN,
+    TipoToken.TK_SI, TipoToken.TK_ENTONCES,
+    TipoToken.TK_IMPRIMIR,
     ],
+    
     "identificador": [TipoToken.TK_ID],
     "numero":        [TipoToken.TK_ENTERO, TipoToken.TK_DECIMAL],
     "cadena":        [TipoToken.TK_CADENA],
