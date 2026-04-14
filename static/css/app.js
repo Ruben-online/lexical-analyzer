@@ -74,14 +74,14 @@ function limpiar() {
 }
 
 // ── Tabs ───────────────────────────────────────────────────────
-/*function mostrarPanel(tab) {
+function mostrarPanel(tab) {
   _tabActual = tab;
   ['tokens','arbol-txt','arbol-vis'].forEach(t => {
     $('panel-' + t).style.display   = t === tab ? 'block' : 'none';
     $('tab-'   + t).classList.toggle('active', t === tab);
   });
   $('leyenda-tokens').style.display = tab === 'tokens' ? 'flex' : 'none';
-}*/
+}
 
 function cambiarTab(seccion) {
   $('page-title').textContent = seccion === 'lexico'
