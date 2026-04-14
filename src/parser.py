@@ -1,7 +1,8 @@
 """
-parser.py — Analizador Sintactico
+parser.py — Analizador Sintáctico del Compilador de Nutrias
+Vitally — Fase 2
 
-Gramatica implementada (BNF):
+Gramática implementada (BNF):
 
   <programa>          ::= INICIO <sentencias> FIN
   <sentencias>        ::= <sentencia> <sentencias> | <sentencia>
@@ -34,10 +35,10 @@ Gramatica implementada (BNF):
 
   <sentencia_imprimir>::= IMPRIMIR TK_ID ;
 
- Analizador: Descendente recursivo (LL(1))
-  - cada regla gramatical = un metodo _parsear_X()
+Estrategia: descendente recursivo (LL(1))
+  - cada regla gramatical = un método _parsear_X()
   - _consumir() avanza y verifica el token esperado
-  - al primer error sintactico se lanza ErrorSintacticoException
+  - al primer error sintáctico se lanza ErrorSintacticoException
 """
 
 from dataclasses import dataclass, field
@@ -45,7 +46,11 @@ from typing import Optional
 from tokens import TipoToken
 from lexer import Token
 
-### Nodos del AST
+
+# ─────────────────────────────────────────────────
+#  Nodos del AST
+# ─────────────────────────────────────────────────
+
 @dataclass
 class Nodo:
     """Nodo base del árbol sintáctico."""
@@ -65,7 +70,10 @@ class Nodo:
         return Nodo(tipo="TERMINAL", valor=label)
 
 
-#  Errores sintactico
+# ─────────────────────────────────────────────────
+#  Error sintáctico
+# ─────────────────────────────────────────────────
+
 class ErrorSintacticoException(Exception):
     def __init__(self, esperado: str, token: Token):
         self.esperado = esperado
@@ -91,7 +99,11 @@ class ErrorSintacticoException(Exception):
             "columna":  self.columna,
         }
 
-### Parser
+
+# ─────────────────────────────────────────────────
+#  Parser
+# ─────────────────────────────────────────────────
+
 # Tokens que pueden iniciar una sentencia (para el lookahead)
 _INICIO_SENTENCIA = {
     TipoToken.PACIENTE.value,
@@ -419,8 +431,9 @@ class Parser:
         return nodo
 
 
-#  Serializacion del arbol a texto y a dict
-#dict de mensajes en pantalla
+# ─────────────────────────────────────────────────
+#  Serialización del árbol a texto y a dict
+# ─────────────────────────────────────────────────
 
 def arbol_a_texto(nodo: Nodo, prefijo: str = "", es_ultimo: bool = True) -> str:
     """
