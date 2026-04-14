@@ -1,6 +1,6 @@
 """
 servidor.py — Servidor Flask del Compilador de Nutrias
-Vitally — Fase 1 (Léxico) + Fase 2 (Sintáctico)
+Vitally — Fase 1 (Léxico) + Fase 2 (Sintactico)
 """
 
 import sys, os

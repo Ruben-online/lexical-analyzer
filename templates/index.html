@@ -20,11 +20,7 @@
       <div class="nav-section">FASES</div>
       <a href="#" class="nav-item active" onclick="cambiarTab('lexico')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        Fase 1 — Léxico
-      </a>
-      <a href="#" class="nav-item" onclick="cambiarTab('sintactico')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Fase 2 — Sintáctico
+        Debugger
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -39,8 +35,8 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <h1 class="page-title" id="page-title">Analizador Léxico</h1>
-        <p class="page-sub" id="page-sub">Fase 1 — Análisis en tiempo real</p>
+        <h1 class="page-title" id="page-title">Analizador Lexico</h1>
+        <p class="page-sub" id="page-sub">Debugger</p>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="status-pill" id="status-pill">
@@ -48,7 +44,7 @@
           <span id="status-text">Esperando...</span>
         </div>
         <div class="panel-actions">
-          <button class="btn-ghost" onclick="cargarEjemplo('valido')">Ejemplo válido</button>
+          <button class="btn-ghost" onclick="cargarEjemplo('valido')">Ejemplo valido</button>
           <button class="btn-ghost" onclick="cargarEjemplo('errores')">Con errores</button>
           <button class="btn-ghost" onclick="limpiar()">Limpiar</button>
         </div>
@@ -73,7 +69,7 @@
         <div class="stat-icon" id="stat-errlex-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
-        <div><div class="stat-label">Errores léxicos</div><div class="stat-value" id="stat-errores">0</div></div>
+        <div><div class="stat-label">Errores lexicos</div><div class="stat-value" id="stat-errores">0</div></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon" id="stat-estado-icon">
@@ -88,13 +84,13 @@
       <!-- Editor -->
       <section class="panel">
         <div class="panel-header">
-          <span class="panel-title">Código fuente (.nut)</span>
-          <span class="hint-text">El análisis corre automáticamente</span>
+          <span class="panel-title">Codigo fuente (.nut)</span>
+          <span class="hint-text">El analisis corre automaticamente</span>
         </div>
         <div class="editor-wrapper">
           <div class="line-numbers" id="line-numbers">1</div>
           <textarea id="editor" class="editor"
-            placeholder="// Escribe código .nut aquí&#10;INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;FIN"
+            placeholder="// Escribe codigo .nut aqui&#10;INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;FIN"
             spellcheck="false"
             oninput="onEditorInput()"
             onscroll="sincronizarScroll()"></textarea>
@@ -106,15 +102,15 @@
         <div class="panel-header">
           <div class="tab-bar">
             <button class="tab active" id="tab-tokens" onclick="mostrarPanel('tokens')">Tokens</button>
-            <button class="tab" id="tab-arbol-txt" onclick="mostrarPanel('arbol-txt')">Árbol texto</button>
-            <button class="tab" id="tab-arbol-vis" onclick="mostrarPanel('arbol-vis')">Árbol visual</button>
+            <button class="tab" id="tab-arbol-txt" onclick="mostrarPanel('arbol-txt')">Arbol texto</button>
+            <button class="tab" id="tab-arbol-vis" onclick="mostrarPanel('arbol-vis')">Arbol visual</button>
           </div>
           <div class="leyenda" id="leyenda-tokens">
             <span class="badge reservada">Reservada</span>
             <span class="badge identificador">ID</span>
-            <span class="badge numero">Número</span>
+            <span class="badge numero">Numero</span>
             <span class="badge operador">Op</span>
-            <span class="badge simbolo">Símbolo</span>
+            <span class="badge simbolo">Simbolo</span>
           </div>
         </div>
 
@@ -122,55 +118,55 @@
         <div class="results-wrapper" id="panel-tokens">
           <div class="empty-state" id="empty-state">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            <p>Empieza a escribir código .nut</p>
+            <p>Empieza a escribir codigo .nut</p>
           </div>
           <table class="token-table" id="token-table" style="display:none">
-            <thead><tr><th>#</th><th>Lexema</th><th>Token</th><th>Línea</th><th>Col</th></tr></thead>
+            <thead><tr><th>#</th><th>Lexema</th><th>Token</th><th>Linea</th><th>Col</th></tr></thead>
             <tbody id="token-body"></tbody>
           </table>
         </div>
 
-        <!-- Panel árbol texto -->
+        <!-- Panel arbol texto -->
         <div class="results-wrapper" id="panel-arbol-txt" style="display:none">
           <div class="empty-state" id="empty-arbol-txt">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
-            <p>El árbol aparece cuando el programa es válido</p>
+            <p>El arbol aparece cuando el programa es valido</p>
           </div>
           <pre class="arbol-pre" id="arbol-pre" style="display:none"></pre>
         </div>
 
-        <!-- Panel árbol visual -->
+        <!-- Panel arbol visual -->
         <div class="results-wrapper" id="panel-arbol-vis" style="display:none;overflow:auto">
           <div class="empty-state" id="empty-arbol-vis">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>
-            <p>El árbol aparece cuando el programa es válido</p>
+            <p>El arbol aparece cuando el programa es valido</p>
           </div>
           <div id="arbol-vis-container"></div>
         </div>
       </section>
     </div>
 
-    <!-- Panel errores léxicos -->
+    <!-- Panel errores lexicos -->
     <section class="error-panel" id="error-panel-lex" style="display:none">
       <div class="panel-header error-header">
         <span class="panel-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Errores léxicos
+          Errores lexicos
         </span>
         <span class="error-count" id="error-count-lex">0 errores</span>
       </div>
       <table class="token-table">
-        <thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead>
+        <thead><tr><th>Lexema</th><th>Linea</th><th>Col</th><th>Descripcion</th></tr></thead>
         <tbody id="error-body-lex"></tbody>
       </table>
     </section>
 
-    <!-- Panel error sintáctico -->
+    <!-- Panel error sintactico -->
     <section class="error-panel error-sint" id="error-panel-sint" style="display:none">
       <div class="panel-header error-header">
         <span class="panel-title">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Error sintáctico
+          Error sintactico
         </span>
       </div>
       <div class="error-sint-body" id="error-sint-body"></div>
