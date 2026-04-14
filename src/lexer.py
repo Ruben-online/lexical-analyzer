@@ -2,11 +2,7 @@ import re
 from dataclasses import dataclass, asdict
 from tokens import TipoToken, PALABRAS_RESERVADAS, categoria_de
 
-
-# ─────────────────────────────────────────────────
 #  Estructuras de datos
-# ─────────────────────────────────────────────────
-
 @dataclass
 class Token:
     tipo: str
@@ -17,7 +13,6 @@ class Token:
 
     def to_dict(self) -> dict:
         return asdict(self)
-
 
 @dataclass
 class ErrorLexico:
@@ -30,9 +25,7 @@ class ErrorLexico:
         return asdict(self)
 
 
-# ─────────────────────────────────────────────────
-#  Especificación de tokens (orden = prioridad)
-# ─────────────────────────────────────────────────
+#  Especificacion de tokens (orden = prioridad)
 
 _SPEC = [
 

@@ -14,7 +14,6 @@ _lexer = Lexer()
 def index():
     return render_template("index.html")
 
-
 @app.route("/analizar", methods=["POST"])
 def analizar():
     """

@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 class TipoToken(Enum):
     # ── Palabras reservadas ──────────────────
     PACIENTE    = "PACIENTE"
