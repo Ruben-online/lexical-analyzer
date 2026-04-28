@@ -41,10 +41,8 @@ _SPEC = [
     ("_COMENTARIO_SL", r"//[^\n]*"),
     ("_ESPACIO",       r"[ \t\r\n]+"),
 
-    # ── 2. Operadores compuestos (ANTES que simples) ─────
-    ("TK_IGUAL",        r"=="),
-    ("TK_MAYOR_IGUAL",  r">="),
-    ("TK_MENOR_IGUAL",  r"<="),
+    # ── 2. Operadores compuestos ─────────────
+    ("TK_IGUAL",       r"=="),
 
     # ── 3. ERRORES (alta prioridad) ──────────
 
@@ -75,9 +73,8 @@ _SPEC = [
 
     # ── 7. Símbolos ─────────────────────────
     ("TK_FIN_INSTRUC", r";"),
-    ("TK_MAYOR",        r">"),
-    ("TK_MENOR",        r"<"),
-    # LT y GT se reconocen igual que MAYOR/MENOR — el parser decide el contexto
+    ("TK_LT",          r"<"),
+    ("TK_GT",          r">"),
 
     # ── 8. Error específico ─────────────────
     ("_IGUAL_SIMPLE",  r"="),

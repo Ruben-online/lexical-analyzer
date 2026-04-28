@@ -11,32 +11,38 @@
   <aside class="sidebar">
     <div class="sidebar-brand">
       <span class="brand-icon">🦦</span>
-      <div>
-        <div class="brand-name">Vitally</div>
-        <div class="brand-sub">Compilador de Nutrias</div>
-      </div>
+      <div><div class="brand-name">Vitally</div><div class="brand-sub">Compilador de Nutrias</div></div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section">FASES</div>
-      <a href="#" class="nav-item active" onclick="cambiarTab('lexico')">
+      <a href="#" class="nav-item active" onclick="cambiarTab('lexico');return false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        Debugger
+        Fase 1 — Léxico
+      </a>
+      <a href="#" class="nav-item" onclick="cambiarTab('sintactico');return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Fase 2 — Sintáctico
+      </a>
+      <a href="#" class="nav-item" onclick="cambiarTab('semantico');return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Fase 3 — Semántico
+      </a>
+      <a href="#" class="nav-item" onclick="cambiarTab('plan');return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Fase 4 — Plan IA
       </a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-badge">N</div>
-      <div>
-        <div class="user-name">Dra. Nutricionista</div>
-        <div class="user-role">Compiladores — URL</div>
-      </div>
+      <div><div class="user-name">Dra. Nutricionista</div><div class="user-role">Compiladores — URL</div></div>
     </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
       <div>
-        <h1 class="page-title" id="page-title">Analizador Lexico</h1>
-        <p class="page-sub" id="page-sub">Debugger</p>
+        <h1 class="page-title" id="page-title">Compilador de Nutrias</h1>
+        <p class="page-sub" id="page-sub">Análisis en tiempo real · Fases 1–4</p>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
         <div class="status-pill" id="status-pill">
@@ -44,132 +50,137 @@
           <span id="status-text">Esperando...</span>
         </div>
         <div class="panel-actions">
-          <button class="btn-ghost" onclick="cargarEjemplo('valido')">Ejemplo valido</button>
+          <button class="btn-ghost" onclick="cargarEjemplo('valido')">Ejemplo válido</button>
           <button class="btn-ghost" onclick="cargarEjemplo('errores')">Con errores</button>
           <button class="btn-ghost" onclick="limpiar()">Limpiar</button>
         </div>
       </div>
     </header>
 
-    <!-- Stats -->
     <section class="stats-row" id="stats-row">
       <div class="stat-card">
-        <div class="stat-icon green">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        </div>
+        <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
         <div><div class="stat-label">Tokens</div><div class="stat-value" id="stat-tokens">0</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon green">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        </div>
-        <div><div class="stat-label">Reservadas</div><div class="stat-value" id="stat-reservadas">0</div></div>
+        <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div><div class="stat-label">Fase activa</div><div class="stat-value" id="stat-fase">—</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" id="stat-errlex-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-        <div><div class="stat-label">Errores lexicos</div><div class="stat-value" id="stat-errores">0</div></div>
+        <div class="stat-icon" id="stat-err-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div><div class="stat-label">Errores</div><div class="stat-value" id="stat-errores">0</div></div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" id="stat-estado-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
+        <div class="stat-icon" id="stat-estado-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
         <div><div class="stat-label">Estado</div><div class="stat-value" id="stat-estado">—</div></div>
       </div>
     </section>
 
-    <!-- Workspace -->
     <div class="workspace">
       <!-- Editor -->
       <section class="panel">
         <div class="panel-header">
-          <span class="panel-title">Codigo fuente (.nut)</span>
-          <span class="hint-text">El analisis corre automaticamente</span>
+          <span class="panel-title">Código fuente (.nut)</span>
+          <span class="hint-text">Análisis automático en tiempo real</span>
         </div>
         <div class="editor-wrapper">
           <div class="line-numbers" id="line-numbers">1</div>
           <textarea id="editor" class="editor"
-            placeholder="// Escribe codigo .nut aqui&#10;INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;FIN"
+            placeholder="INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;  PESO: 65.5;&#10;  OBJETIVO: bajar_grasa;&#10;&#10;  RUTINA: mi_rutina;&#10;    ACCION: flexiones * 10;&#10;  FIN&#10;&#10;  IMPRIMIR mi_rutina;&#10;FIN"
             spellcheck="false"
             oninput="onEditorInput()"
             onscroll="sincronizarScroll()"></textarea>
         </div>
       </section>
 
-      <!-- Panel derecho con tabs -->
+      <!-- Panel resultados con tabs -->
       <section class="panel">
         <div class="panel-header">
           <div class="tab-bar">
-            <button class="tab active" id="tab-tokens" onclick="mostrarPanel('tokens')">Tokens</button>
-            <button class="tab" id="tab-arbol-txt" onclick="mostrarPanel('arbol-txt')">Arbol texto</button>
-            <button class="tab" id="tab-arbol-vis" onclick="mostrarPanel('arbol-vis')">Arbol visual</button>
+            <button class="tab active" id="tab-tokens"    onclick="mostrarPanel('tokens')">Tokens</button>
+            <button class="tab"        id="tab-arbol-txt" onclick="mostrarPanel('arbol-txt')">Árbol</button>
+            <button class="tab"        id="tab-tabla"     onclick="mostrarPanel('tabla')">Tabla Símb.</button>
+            <button class="tab"        id="tab-plan"      onclick="mostrarPanel('plan')">Plan IA 🤖</button>
           </div>
           <div class="leyenda" id="leyenda-tokens">
             <span class="badge reservada">Reservada</span>
             <span class="badge identificador">ID</span>
-            <span class="badge numero">Numero</span>
+            <span class="badge numero">Num</span>
             <span class="badge operador">Op</span>
-            <span class="badge simbolo">Simbolo</span>
           </div>
         </div>
 
-        <!-- Panel tokens -->
+        <!-- Tokens -->
         <div class="results-wrapper" id="panel-tokens">
-          <div class="empty-state" id="empty-state">
+          <div class="empty-state" id="empty-tokens">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            <p>Empieza a escribir codigo .nut</p>
+            <p>Empieza a escribir código .nut</p>
           </div>
           <table class="token-table" id="token-table" style="display:none">
-            <thead><tr><th>#</th><th>Lexema</th><th>Token</th><th>Linea</th><th>Col</th></tr></thead>
+            <thead><tr><th>#</th><th>Lexema</th><th>Token</th><th>L</th><th>C</th></tr></thead>
             <tbody id="token-body"></tbody>
           </table>
         </div>
 
-        <!-- Panel arbol texto -->
+        <!-- Árbol texto -->
         <div class="results-wrapper" id="panel-arbol-txt" style="display:none">
-          <div class="empty-state" id="empty-arbol-txt">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
-            <p>El arbol aparece cuando el programa es valido</p>
+          <div class="empty-state" id="empty-arbol">
+            <p>El árbol aparece cuando el programa es sintácticamente válido</p>
           </div>
           <pre class="arbol-pre" id="arbol-pre" style="display:none"></pre>
         </div>
 
-        <!-- Panel arbol visual -->
-        <div class="results-wrapper" id="panel-arbol-vis" style="display:none;overflow:auto">
-          <div class="empty-state" id="empty-arbol-vis">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>
-            <p>El arbol aparece cuando el programa es valido</p>
+        <!-- Tabla de símbolos -->
+        <div class="results-wrapper" id="panel-tabla" style="display:none">
+          <div class="empty-state" id="empty-tabla">
+            <p>La tabla aparece cuando el análisis semántico es exitoso</p>
           </div>
-          <div id="arbol-vis-container"></div>
+          <div class="tabla-simbolos" id="tabla-simbolos-contenido" style="display:none"></div>
+        </div>
+
+        <!-- Plan IA -->
+        <div class="results-wrapper" id="panel-plan" style="display:none">
+          <div class="plan-wrap" id="plan-contenido">
+            <div class="empty-state" id="empty-plan">
+              <p>El plan se genera cuando el análisis semántico es exitoso</p>
+            </div>
+            <div id="plan-listo" style="display:none">
+              <button class="btn-generar" id="btn-generar" onclick="generarPlan()">
+                🤖 Generar Plan Clínico con Gemini
+              </button>
+              <div id="plan-resultado"></div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
 
-    <!-- Panel errores lexicos -->
+    <!-- Error panels -->
     <section class="error-panel" id="error-panel-lex" style="display:none">
       <div class="panel-header error-header">
-        <span class="panel-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Errores lexicos
-        </span>
-        <span class="error-count" id="error-count-lex">0 errores</span>
+        <span class="panel-title">⚠ Errores léxicos</span>
+        <span class="error-count" id="error-count-lex"></span>
       </div>
       <table class="token-table">
-        <thead><tr><th>Lexema</th><th>Linea</th><th>Col</th><th>Descripcion</th></tr></thead>
+        <thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead>
         <tbody id="error-body-lex"></tbody>
       </table>
     </section>
 
-    <!-- Panel error sintactico -->
     <section class="error-panel error-sint" id="error-panel-sint" style="display:none">
       <div class="panel-header error-header">
-        <span class="panel-title">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Error sintactico
-        </span>
+        <span class="panel-title">⚠ Error sintáctico</span>
+        <span class="error-count" id="error-sint-fase">Fase 2</span>
       </div>
       <div class="error-sint-body" id="error-sint-body"></div>
+    </section>
+
+    <section class="error-panel error-sint" id="error-panel-sem" style="display:none">
+      <div class="panel-header error-header">
+        <span class="panel-title">⚠ Error semántico</span>
+        <span class="error-count" id="error-sem-code">Fase 3</span>
+      </div>
+      <div class="error-sint-body" id="error-sem-body"></div>
     </section>
 
   </main>

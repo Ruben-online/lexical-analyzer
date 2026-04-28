@@ -1,65 +1,49 @@
-# 🦦 Compilador de Nutrias — Prototipo Web
-**Vitally | Universidad Rafael Landívar | Compiladores**
+# 🦦 Compilador de Nutrias — Vitally v4
+Universidad Rafael Landívar | Compiladores
 
-## Requisitos
-- Python 3.10+
-
-## Instalación y arranque
-
+## Instalación
 ```bash
-# 1. Instalar dependencias
-pip install -r requirements.txt
-
-# 2. Correr el servidor
+pip install flask flask-cors requests
 python servidor.py
-
-# 3. Abrir en el navegador
-http://localhost:5000
+# → http://localhost:5000
 ```
+
+## Fases
+1. **Léxico** — Tokeniza el código .nut
+2. **Sintáctico** — Valida la gramática, construye el árbol
+3. **Semántico** — Tabla de símbolos, reglas clínicas
+4. **Gemini** — Genera el plan clínico con IA
 
 ## Estructura
 ```
-nutrias_proto/
-├── servidor.py          ← Flask (Persona 2)
-├── requirements.txt
+nutrias_final/
+├── servidor.py
 ├── src/
-│   ├── tokens.py        ← Definición de tokens (Persona 1)
-│   └── lexer.py         ← Analizador léxico   (Persona 1)
-├── templates/
-│   └── index.html       ← Interfaz web         (Persona 3)
-├── static/css/
-│   ├── estilos.css      ← Estilos Vitally      (Persona 3)
-│   └── app.js           ← Lógica frontend      (Persona 3)
-└── ejemplos/
-    └── valido.nut
+│   ├── tokens.py      ← Definición de tokens
+│   ├── lexer.py       ← Fase 1
+│   ├── parser.py      ← Fase 2
+│   ├── semantico.py   ← Fase 3
+│   └── gemini.py      ← Fase 4 (API Key incluida)
+├── templates/index.html
+└── static/css/
+    ├── estilos.css
+    └── app.js
 ```
 
-## Endpoint API
+## Ejemplo válido
 ```
-POST /analizar
-Body: { "codigo": "PACIENTE: Sofia;\nEDAD: 25;" }
+INICIO
+    PACIENTE: Sofia;
+    EDAD: 25;
+    PESO: 65.5;
+    RESTRICCION: <lumbar>;
+    OBJETIVO: bajar_grasa;
 
-Response:
-{
-  "tokens":  [ { tipo, lexema, linea, columna, categoria } ],
-  "errores": [ { lexema, linea, columna, mensaje } ],
-  "resumen": { total_tokens, total_errores, exitoso }
-}
+    RUTINA: rutina_basica;
+        ACCION: flexiones * 10;
+        ACCION: cardio;
+    FIN
+
+    IMPRIMIR rutina_basica;
+FIN
 ```
-
-## Tokens del lenguaje
-| Token | Patrón |
-|---|---|
-| Palabras reservadas | PACIENTE EDAD PESO OBJETIVO RESTRICCION ACCION RECETA RUTINA DIETA |
-| TK_ID | `[a-zA-Z...][...0-9_]*` |
-| TK_ENTERO | `[0-9]+` |
-| TK_DECIMAL | `[0-9]+\.[0-9]+` |
-| TK_IGUAL | `==` |
-| TK_ASIGNACION | `:` |
-| TK_SUMA | `+` |
-| TK_MULT | `*` |
-| TK_FIN_INSTRUC | `;` |
-| TK_LT / TK_GT | `< >` |
-
-## Atajo de teclado
-`Ctrl + Enter` → Analizar

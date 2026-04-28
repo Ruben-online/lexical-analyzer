@@ -1,6 +1,6 @@
 """
-servidor.py — Servidor Flask del Compilador de Nutrias
-Vitally — Fase 1 (Léxico) + Fase 2 (Sintactico)
+servidor.py — Compilador de Nutrias
+Fases: Léxico + Sintáctico + Semántico + Generación (Gemini)
 """
 
 import sys, os
@@ -8,10 +8,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from lexer   import Lexer
-from parser  import Parser, arbol_a_texto, arbol_a_dict
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+from lexer     import Lexer
+from parser    import Parser, arbol_a_texto, arbol_a_dict
+from semantico import AnalizadorSemantico, ErrorSemantico
+from gemini    import generar_plan
+
+app    = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 _lexer = Lexer()
 
@@ -21,76 +24,85 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/analizar", methods=["POST"])
-def analizar():
-    """Fase 1 — Léxico."""
+@app.route("/compilar", methods=["POST"])
+def compilar():
+    """
+    Pipeline completo: Léxico → Sintáctico → Semántico → Gemini
+    Body:  { "codigo": "...", "generar": true/false }
+    """
     data   = request.get_json(silent=True) or {}
     codigo = data.get("codigo", "").strip()
+    pedir_plan = data.get("generar", False)
+
     if not codigo:
-        return jsonify({"error": "El campo 'codigo' está vacío"}), 400
+        return jsonify({"error": "Código vacío"}), 400
 
-    tokens, errores = _lexer.tokenizar(codigo)
-    tokens_visibles = [t.to_dict() for t in tokens if t.tipo != "TK_EOF"]
+    resultado = {
+        "tokens": [], "errores_lexicos": [],
+        "arbol_texto": None, "arbol_dict": None,
+        "error_sintactico": None,
+        "tabla_simbolos": None,
+        "error_semantico": None,
+        "plan_clinico": None,
+        "prompt_generado": None,
+        "resumen": {"exitoso": False, "fase_exitosa": "ninguna", "mensaje": ""}
+    }
 
-    return jsonify({
-        "tokens":  tokens_visibles,
-        "errores": [e.to_dict() for e in errores],
-        "resumen": {
-            "total_tokens":  len(tokens_visibles),
-            "total_errores": len(errores),
-            "exitoso":       len(errores) == 0
-        }
-    })
+    # ── FASE 1: Léxico ─────────────────────────────────────
+    tokens, errores_lex = _lexer.tokenizar(codigo)
+    resultado["tokens"] = [t.to_dict() for t in tokens if t.tipo != "TK_EOF"]
 
+    if errores_lex:
+        resultado["errores_lexicos"] = [e.to_dict() for e in errores_lex]
+        resultado["resumen"] = {"exitoso": False, "fase_exitosa": "ninguna",
+                                "mensaje": f"{len(errores_lex)} error(es) léxico(s)"}
+        return jsonify(resultado)
 
-@app.route("/parsear", methods=["POST"])
-def parsear():
-    """Fase 1 + 2 — Léxico + Sintáctico."""
-    data   = request.get_json(silent=True) or {}
-    codigo = data.get("codigo", "").strip()
-    if not codigo:
-        return jsonify({"error": "El campo 'codigo' está vacío"}), 400
-
-    # Fase 1
-    tokens, errores_lexicos = _lexer.tokenizar(codigo)
-    tokens_visibles = [t.to_dict() for t in tokens if t.tipo != "TK_EOF"]
-
-    if errores_lexicos:
-        return jsonify({
-            "tokens": tokens_visibles,
-            "errores_lexicos": [e.to_dict() for e in errores_lexicos],
-            "arbol_texto": None, "arbol_dict": None,
-            "error_sintactico": None,
-            "resumen": {"exitoso": False, "fase_exitosa": "ninguna",
-                        "mensaje": "Compilacion detenida: errores lexicos"}
-        })
-
-    # Fase 2
+    # ── FASE 2: Sintáctico ─────────────────────────────────
     parser = Parser(tokens)
     arbol, error_sint = parser.parsear()
 
     if error_sint:
-        return jsonify({
-            "tokens": tokens_visibles, "errores_lexicos": [],
-            "arbol_texto": None, "arbol_dict": None,
-            "error_sintactico": error_sint.to_dict(),
-            "resumen": {"exitoso": False, "fase_exitosa": "lexica",
-                        "mensaje": str(error_sint)}
-        })
+        resultado["error_sintactico"] = error_sint.to_dict()
+        resultado["resumen"] = {"exitoso": False, "fase_exitosa": "lexica",
+                                "mensaje": str(error_sint)}
+        return jsonify(resultado)
 
-    # Exito
-    texto = arbol_a_texto(arbol, "", True)
-    return jsonify({
-        "tokens": tokens_visibles, "errores_lexicos": [],
-        "arbol_texto": texto,
-        "arbol_dict":  arbol_a_dict(arbol),
-        "error_sintactico": None,
-        "resumen": {"exitoso": True, "fase_exitosa": "completa",
-                    "mensaje": "Cadena aceptada"}
-    })
+    resultado["arbol_texto"] = arbol_a_texto(arbol, "", True)
+    resultado["arbol_dict"]  = arbol_a_dict(arbol)
+
+    # ── FASE 3: Semántico ──────────────────────────────────
+    sem = AnalizadorSemantico()
+    try:
+        tabla = sem.analizar(arbol)
+        resultado["tabla_simbolos"] = tabla.to_dict()
+    except ErrorSemantico as e:
+        resultado["error_semantico"] = e.to_dict()
+        resultado["resumen"] = {"exitoso": False, "fase_exitosa": "sintactica",
+                                "mensaje": e.mensaje}
+        return jsonify(resultado)
+
+    # ── FASE 4: Generación (Gemini) ────────────────────────
+    if pedir_plan:
+        gen = generar_plan(tabla)
+        if gen["ok"]:
+            resultado["plan_clinico"]    = gen["plan"]
+            resultado["prompt_generado"] = gen.get("prompt", "")
+            resultado["resumen"] = {"exitoso": True, "fase_exitosa": "completa",
+                                    "mensaje": "Plan clínico generado exitosamente"}
+        else:
+            resultado["resumen"] = {"exitoso": False, "fase_exitosa": "semantica",
+                                    "mensaje": f"Error Gemini: {gen['error']}"}
+    else:
+        resultado["resumen"] = {"exitoso": True, "fase_exitosa": "semantica",
+                                "mensaje": "Análisis completo — presiona 'Generar Plan' para obtener la rutina"}
+
+    return jsonify(resultado)
 
 
 if __name__ == "__main__":
-    print("\n  Compilador de Nutrias — Fase 1 + 2")
+    print("\n  🦦 Compilador de Nutrias — Vitally")
+    print("  Léxico + Sintáctico + Semántico + Gemini")
+    print("  ─────────────────────────────────────────")
     print("  http://localhost:5000\n")
     app.run(debug=True, port=5000)

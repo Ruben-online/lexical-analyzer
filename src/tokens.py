@@ -32,15 +32,11 @@ class TipoToken(Enum):
     TK_IGUAL       = "TK_IGUAL"        # ==
     TK_SUMA        = "TK_SUMA"         # +
     TK_MULT        = "TK_MULT"         # *
-    TK_MAYOR       = "TK_MAYOR"        # >
-    TK_MENOR       = "TK_MENOR"        # <
-    TK_MAYOR_IGUAL = "TK_MAYOR_IGUAL"  # >=
-    TK_MENOR_IGUAL = "TK_MENOR_IGUAL"  # <=
 
     # ── Símbolos estructurales ───────────────
     TK_FIN_INSTRUC = "TK_FIN_INSTRUC"  # ;
-    TK_LT          = "TK_LT"           # < (solo para restriccion medica)
-    TK_GT          = "TK_GT"           # > (solo para restriccion medica)
+    TK_LT          = "TK_LT"           # <
+    TK_GT          = "TK_GT"           # >
 
     # ── Especiales ───────────────────────────
     TK_EOF         = "TK_EOF"
@@ -84,9 +80,7 @@ CATEGORIAS: dict[str, list[TipoToken]] = {
     "numero":        [TipoToken.TK_ENTERO, TipoToken.TK_DECIMAL],
     "cadena":        [TipoToken.TK_CADENA],
     "operador":      [TipoToken.TK_ASIGNACION, TipoToken.TK_IGUAL,
-                      TipoToken.TK_SUMA, TipoToken.TK_MULT,
-                      TipoToken.TK_MAYOR, TipoToken.TK_MENOR,
-                      TipoToken.TK_MAYOR_IGUAL, TipoToken.TK_MENOR_IGUAL],
+                      TipoToken.TK_SUMA, TipoToken.TK_MULT],
     "simbolo":       [TipoToken.TK_FIN_INSTRUC, TipoToken.TK_LT, TipoToken.TK_GT],
     "error":         [TipoToken.TK_ERROR],
 }

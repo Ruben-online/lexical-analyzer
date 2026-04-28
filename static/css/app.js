@@ -1,6 +1,5 @@
-/* app.js — Compilador de Nutrias v2 — Analisis en tiempo real */
+/* app.js — Compilador de Nutrias v4 — Léxico+Sintáctico+Semántico+Gemini */
 
-// ── Ejemplos ──────────────────────────────────────────────────
 const EJEMPLOS = {
   valido: `INICIO
     PACIENTE: Sofia;
@@ -10,8 +9,9 @@ const EJEMPLOS = {
     OBJETIVO: bajar_grasa;
 
     SI PESO > 60 ENTONCES
-        RUTINA: rutina_basica;
+        RUTINA: rutina_intensa;
             ACCION: flexiones * 10;
+            ACCION: sentadillas * 15;
             ACCION: proteina + carbohidrato;
         FIN
     FIN
@@ -21,263 +21,334 @@ const EJEMPLOS = {
         ACCION: almuerzo_pollo;
     FIN
 
-    IMPRIMIR rutina_basica;
+    IMPRIMIR rutina_intensa;
 FIN`,
-
   errores: `INICIO
-    PACIENTE: @Sofia;
-    EDAD: veinticinco;
-    SI PESO > 60
-        RUTINA: rutina_basica;
-            ACCION: flexiones;
-        FIN
+    RUTINA: rutina_sin_paciente;
+        ACCION: flexiones;
     FIN
+    PACIENTE: Carlos;
 FIN`
 };
 
-// ── State ──────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 let _debounce = null;
 let _tabActual = 'tokens';
+let _ultimaTabla = null;
 
-// ── Init ───────────────────────────────────────────────────────
 sincronizarLineas();
 
-// ── Editor ─────────────────────────────────────────────────────
 function onEditorInput() {
   sincronizarLineas();
-  setStatus('loading', 'Analizando...');
+  setStatus('loading','Analizando...');
   clearTimeout(_debounce);
-  _debounce = setTimeout(correrAnalisis, 400); // 400ms debounce
+  _debounce = setTimeout(correrAnalisis, 450);
 }
 
 function sincronizarLineas() {
-  const n = ($('editor').value.match(/\n/g) || []).length + 1;
-  $('line-numbers').textContent = Array.from({length:n}, (_,i) => i+1).join('\n');
+  const n = ($('editor').value.match(/\n/g)||[]).length + 1;
+  $('line-numbers').textContent = Array.from({length:n},(_,i)=>i+1).join('\n');
 }
-
-function sincronizarScroll() {
-  $('line-numbers').scrollTop = $('editor').scrollTop;
-}
+function sincronizarScroll() { $('line-numbers').scrollTop = $('editor').scrollTop; }
 
 function cargarEjemplo(tipo) {
-  $('editor').value = EJEMPLOS[tipo] || '';
+  $('editor').value = EJEMPLOS[tipo]||'';
   sincronizarLineas();
   onEditorInput();
 }
-
 function limpiar() {
   $('editor').value = '';
   sincronizarLineas();
-  limpiarResultados();
-  setStatus('idle', 'Esperando...');
+  limpiarTodo();
+  setStatus('idle','Esperando...');
 }
 
-// ── Tabs ───────────────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────────
 function mostrarPanel(tab) {
   _tabActual = tab;
-  ['tokens','arbol-txt','arbol-vis'].forEach(t => {
-    $('panel-' + t).style.display   = t === tab ? 'block' : 'none';
-    $('tab-'   + t).classList.toggle('active', t === tab);
+  ['tokens','arbol-txt','tabla','plan'].forEach(t => {
+    $('panel-'+t).style.display = t===tab ? 'block':'none';
+    $('tab-'+t).classList.toggle('active', t===tab);
   });
-  $('leyenda-tokens').style.display = tab === 'tokens' ? 'flex' : 'none';
+  $('leyenda-tokens').style.display = tab==='tokens' ? 'flex':'none';
 }
 
-function cambiarTab(seccion) {
-  $('page-title').textContent = seccion === 'lexico'
-    ? 'Analizador Léxico' : 'Analizador Sintactico';
-  $('page-sub').textContent = seccion === 'lexico'
-    ? 'Fase 1 — Analisis en tiempo real'
-    : 'Fase 2 — Arbol sintactico';
-  document.querySelectorAll('.nav-item').forEach((el,i) =>
-    el.classList.toggle('active', i === (seccion==='lexico'?0:1)));
-  if (seccion === 'sintactico') mostrarPanel('arbol-txt');
-  else mostrarPanel('tokens');
+function cambiarTab(s) {
+  const titulos = {lexico:'Analizador Léxico',sintactico:'Analizador Sintáctico',
+                   semantico:'Tabla de Símbolos',plan:'Generación de Plan — Gemini'};
+  const subs    = {lexico:'Fase 1',sintactico:'Fase 2',semantico:'Fase 3',plan:'Fase 4 — IA'};
+  $('page-title').textContent = titulos[s]||'Compilador de Nutrias';
+  $('page-sub').textContent   = subs[s]||'';
+  document.querySelectorAll('.nav-item').forEach((el,i)=>
+    el.classList.toggle('active', i===['lexico','sintactico','semantico','plan'].indexOf(s)));
+  const tabMap = {lexico:'tokens',sintactico:'arbol-txt',semantico:'tabla',plan:'plan'};
+  mostrarPanel(tabMap[s]||'tokens');
 }
 
-// ── Status pill ────────────────────────────────────────────────
 function setStatus(tipo, texto) {
-  const dot  = $('status-dot');
-  const span = $('status-text');
-  dot.className = 'status-dot ' + tipo;
-  span.textContent = texto;
+  $('status-dot').className = 'status-dot '+(tipo==='idle'?'':tipo);
+  $('status-text').textContent = texto;
 }
 
-// ── Analisis principal ─────────────────────────────────────────
+// ── Análisis principal ─────────────────────────────────────────
 async function correrAnalisis() {
   const codigo = $('editor').value.trim();
-  if (!codigo) { limpiarResultados(); setStatus('idle','Esperando...'); return; }
+  if (!codigo) { limpiarTodo(); setStatus('idle','Esperando...'); return; }
+  try {
+    const r = await fetch('/compilar', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({codigo, generar: false})
+    });
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    renderTodo(await r.json());
+  } catch(e) { setStatus('error','Sin conexión al servidor'); }
+}
+
+// ── Generar plan con Gemini ───────────────────────────────────
+async function generarPlan() {
+  const codigo = $('editor').value.trim();
+  const btn    = $('btn-generar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando con Gemini...';
+  $('plan-resultado').innerHTML = `<div class="loading-gemini">
+    <span class="spinner">🤖</span>
+    <p>Gemini está generando el plan clínico personalizado...</p>
+    <p style="font-size:11px;margin-top:8px">Esto puede tomar 5-15 segundos</p>
+  </div>`;
 
   try {
-    const resp = await fetch('/parsear', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codigo })
+    const r = await fetch('/compilar', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({codigo, generar: true})
     });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    renderTodo(data);
+    const data = await r.json();
+    if (data.plan_clinico) {
+      renderPlan(data.plan_clinico, data.prompt_generado);
+      setStatus('ok','Plan generado ✓');
+    } else {
+      $('plan-resultado').innerHTML = `<div class="error-sint-msg">${esc(data.resumen.mensaje)}</div>`;
+    }
   } catch(e) {
-    setStatus('error', 'Sin conexion al servidor');
+    $('plan-resultado').innerHTML = `<div class="error-sint-msg">Error de conexión: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🤖 Generar Plan Clínico con Gemini';
   }
 }
 
-// ── Limpiar ─────────────────────────────────────────────────────
-function limpiarResultados() {
-  $('token-body').innerHTML = '';
-  $('token-table').style.display = 'none';
-  $('empty-state').style.display = 'flex';
-  $('arbol-pre').style.display = 'none';
-  $('empty-arbol-txt').style.display = 'flex';
-  $('arbol-vis-container').innerHTML = '';
-  $('empty-arbol-vis').style.display = 'flex';
-  $('error-panel-lex').style.display  = 'none';
-  $('error-panel-sint').style.display = 'none';
-  $('stat-tokens').textContent = '0';
-  $('stat-reservadas').textContent = '0';
-  $('stat-errores').textContent = '0';
-  $('stat-estado').textContent = '—';
-}
-
-// ── Render completo ─────────────────────────────────────────────
+// ── Render principal ───────────────────────────────────────────
 function renderTodo(data) {
-  const { tokens, errores_lexicos, arbol_texto, arbol_dict, error_sintactico, resumen } = data;
+  const {tokens, errores_lexicos, arbol_texto, tabla_simbolos,
+         error_sintactico, error_semantico, resumen} = data;
 
-  // ── Stats ──────────────────────────────────
-  const reservadas = (tokens||[]).filter(t => t.categoria === 'reservada').length;
-  $('stat-tokens').textContent     = (tokens||[]).length;
-  $('stat-reservadas').textContent = reservadas;
-  $('stat-errores').textContent    = (errores_lexicos||[]).length;
-  $('stat-estado').textContent     = resumen.exitoso ? 'Aceptada' : 'Con errores';
+  // stats
+  $('stat-tokens').textContent = (tokens||[]).length;
+  $('stat-fase').textContent   = resumen.fase_exitosa || '—';
+  const totalErr = (errores_lexicos||[]).length + (error_sintactico?1:0) + (error_semantico?1:0);
+  $('stat-errores').textContent = totalErr;
+  $('stat-estado').textContent  = resumen.exitoso ? 'Válido' : 'Errores';
+  $('stat-err-icon').className  = totalErr > 0 ? 'stat-icon red' : 'stat-icon green';
+  $('stat-estado-icon').className = resumen.exitoso ? 'stat-icon green' : 'stat-icon red';
 
-  const iconEstado = $('stat-estado-icon');
-  iconEstado.className = resumen.exitoso ? 'stat-icon green' : 'stat-icon red';
-  iconEstado.innerHTML = resumen.exitoso
-    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`
-    : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  // tokens
+  const tbody = $('token-body'); tbody.innerHTML='';
+  (tokens||[]).forEach((t,i)=>{
+    const tr=document.createElement('tr');
+    tr.style.animationDelay=Math.min(i*6,150)+'ms';
+    tr.innerHTML=`<td style="color:var(--text-muted);font-size:11px">${i+1}</td>
+      <td><code class="lexema-code">${esc(t.lexema)}</code></td>
+      <td><span class="badge ${t.categoria}">${t.tipo}</span></td>
+      <td>${t.linea}</td><td>${t.columna}</td>`;
+    tbody.appendChild(tr);
+  });
+  $('token-table').style.display = tokens&&tokens.length?'table':'none';
+  $('empty-tokens').style.display = tokens&&tokens.length?'none':'flex';
 
-  const iconErrLex = $('stat-errlex-icon');
-  iconErrLex.className = (errores_lexicos||[]).length > 0 ? 'stat-icon red' : 'stat-icon green';
-
-  // ── Tabla tokens ────────────────────────────
-  const tbody = $('token-body');
-  tbody.innerHTML = '';
-  if (tokens && tokens.length) {
-    tokens.forEach((t, i) => {
-      const tr = document.createElement('tr');
-      tr.style.animationDelay = Math.min(i * 8, 200) + 'ms';
-      tr.innerHTML = `
-        <td style="color:var(--text-muted);font-size:11px">${i+1}</td>
-        <td><code class="lexema-code">${esc(t.lexema)}</code></td>
-        <td><span class="badge ${t.categoria}">${t.tipo}</span></td>
-        <td>${t.linea}</td>
-        <td>${t.columna}</td>`;
-      tbody.appendChild(tr);
-    });
-    $('token-table').style.display = 'table';
-    $('empty-state').style.display = 'none';
-  } else {
-    $('token-table').style.display = 'none';
-    $('empty-state').style.display = 'flex';
-  }
-
-  // ── Arbol texto ─────────────────────────────
+  // árbol
   if (arbol_texto) {
-    $('arbol-pre').textContent    = 'Cadena aceptada\n\nArbol sintactico:\n\n' + arbol_texto;
-    $('arbol-pre').style.display  = 'block';
-    $('empty-arbol-txt').style.display = 'none';
+    $('arbol-pre').textContent = 'Cadena aceptada\n\nÁrbol sintáctico:\n\n'+arbol_texto;
+    $('arbol-pre').style.display='block'; $('empty-arbol').style.display='none';
   } else {
-    $('arbol-pre').style.display  = 'none';
-    $('empty-arbol-txt').style.display = 'flex';
+    $('arbol-pre').style.display='none'; $('empty-arbol').style.display='flex';
   }
 
-  // ── Arbol visual ────────────────────────────
-  const visContainer = $('arbol-vis-container');
-  if (arbol_dict) {
-    visContainer.innerHTML = '';
-    visContainer.appendChild(construirArbolVisual(arbol_dict));
-    $('empty-arbol-vis').style.display = 'none';
+  // tabla de símbolos
+  _ultimaTabla = tabla_simbolos;
+  if (tabla_simbolos) {
+    renderTablaSimbolos(tabla_simbolos);
+    $('tabla-simbolos-contenido').style.display='block'; $('empty-tabla').style.display='none';
+    // habilitar botón de generar
+    $('empty-plan').style.display='none'; $('plan-listo').style.display='block';
+    $('plan-resultado').innerHTML='';
   } else {
-    visContainer.innerHTML = '';
-    $('empty-arbol-vis').style.display = 'flex';
+    $('tabla-simbolos-contenido').style.display='none'; $('empty-tabla').style.display='flex';
+    $('empty-plan').style.display='flex'; $('plan-listo').style.display='none';
   }
 
-  // ── Errores lexicos ─────────────────────────
-  if (errores_lexicos && errores_lexicos.length > 0) {
-    const eb = $('error-body-lex');
-    eb.innerHTML = '';
-    errores_lexicos.forEach(e => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><code class="lexema-code" style="color:var(--red)">${esc(e.lexema)}</code></td>
-        <td>${e.linea}</td>
-        <td>${e.columna}</td>
-        <td>${esc(e.mensaje)}</td>`;
+  // errores
+  renderErroresLexicos(errores_lexicos||[]);
+  renderErrorSintactico(error_sintactico);
+  renderErrorSemantico(error_semantico);
+
+  // status
+  if (resumen.exitoso)               setStatus('ok',    'Análisis completo ✓');
+  else if ((errores_lexicos||[]).length) setStatus('error', 'Error léxico');
+  else if (error_sintactico)          setStatus('warning','Error sintáctico');
+  else if (error_semantico)           setStatus('warning','Error semántico');
+  else                                setStatus('idle',  '...');
+}
+
+function renderTablaSimbolos(tabla) {
+  const div = $('tabla-simbolos-contenido');
+  div.innerHTML = '';
+  if (tabla.paciente) {
+    const p = tabla.paciente;
+    div.innerHTML += `<div class="ts-seccion">
+      <div class="ts-titulo">Entidad Paciente</div>
+      <div class="ts-card">
+        <div class="ts-nombre">👤 ${esc(p.identificador)}</div>
+        <div class="ts-prop">Tipo: <span>${p.tipo}</span></div>
+        ${p.edad  ? `<div class="ts-prop">Edad: <span>${p.edad} años</span></div>` : ''}
+        ${p.peso  ? `<div class="ts-prop">Peso: <span>${p.peso} kg</span></div>` : ''}
+        ${p.objetivo ? `<div class="ts-prop">Objetivo: <span>${esc(p.objetivo)}</span></div>` : ''}
+        ${p.restricciones&&p.restricciones.length ? `<div class="ts-prop">Restricciones: <span>${p.restricciones.join(', ')}</span></div>` : ''}
+        <div class="ts-prop">Declarado en: <span>línea ${p.linea}</span></div>
+      </div>
+    </div>`;
+  }
+  if (tabla.bloques && tabla.bloques.length) {
+    let html='<div class="ts-seccion"><div class="ts-titulo">Bloques declarados</div>';
+    tabla.bloques.forEach(b=>{
+      html+=`<div class="ts-bloque">
+        <span class="ts-bloque-tipo ${b.tipo==='DIETA'?'dieta':''}">${b.tipo}</span>
+        <div class="ts-nombre">${esc(b.nombre)}</div>
+        ${b.acciones.map(a=>`<div class="ts-accion">• ${esc(a)}</div>`).join('')}
+        <div class="ts-prop" style="margin-top:4px">Línea: <span>${b.linea}</span></div>
+      </div>`;
+    });
+    html+='</div>';
+    div.innerHTML+=html;
+  }
+}
+
+function renderPlan(plan, prompt) {
+  const pc = plan.plan_clinico || plan;
+  let html = `<div class="plan-header">
+    <h2>🏥 Plan Clínico — ${esc(pc.paciente||'Paciente')}</h2>
+    <p>${esc(pc.objetivo_principal||'')} · Próxima revisión: ${esc(pc.proxima_revision||'')}</p>
+  </div>`;
+
+  if (pc.rutinas && pc.rutinas.length) {
+    html+='<div class="plan-seccion"><div class="plan-seccion-titulo">💪 Rutinas de Ejercicio</div>';
+    pc.rutinas.forEach(r=>{
+      html+=`<div class="plan-rutina">
+        <div class="plan-bloque-header">${esc(r.nombre)}
+          <span class="plan-bloque-meta">${r.dias_por_semana||'?'} días/sem · ${r.duracion_semanas||'?'} semanas</span>
+        </div>`;
+      (r.ejercicios||[]).forEach(e=>{
+        html+=`<div class="ejercicio-row">
+          <span class="ejercicio-nombre">${esc(e.nombre)}</span>
+          <span class="ejercicio-chip">${e.series||'?'} series</span>
+          <span class="ejercicio-chip">${esc(e.repeticiones||'?')}</span>
+          <span class="ejercicio-chip">⏱ ${esc(e.descanso||'?')}</span>
+        </div>`;
+      });
+      if (r.advertencias && r.advertencias.length) {
+        html+=`<div style="padding:8px 14px;font-size:11px;color:#E65100;background:#FFF3E0">
+          ⚠ ${r.advertencias.join(' · ')}</div>`;
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  if (pc.dietas && pc.dietas.length) {
+    html+='<div class="plan-seccion"><div class="plan-seccion-titulo">🥗 Plan Nutricional</div>';
+    pc.dietas.forEach(d=>{
+      html+=`<div class="plan-dieta">
+        <div class="plan-bloque-header">${esc(d.nombre)}
+          <span class="plan-bloque-meta">~${d.calorias_diarias||'?'} kcal/día</span>
+        </div>`;
+      (d.comidas||[]).forEach(c=>{
+        html+=`<div class="comida-row">
+          <span><strong>${esc(c.momento)}</strong> — ${esc(c.descripcion)}</span>
+          <span class="ejercicio-chip">${c.calorias_aprox||'?'} kcal</span>
+        </div>`;
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  if (pc.observaciones_clinicas) {
+    html+=`<div class="plan-seccion">
+      <div class="plan-seccion-titulo">📋 Observaciones Clínicas</div>
+      <div class="obs-box">${esc(pc.observaciones_clinicas)}</div>
+    </div>`;
+  }
+
+  if (prompt) {
+    html+=`<div class="plan-seccion">
+      <div class="plan-seccion-titulo">🔍 Prompt generado (Fase 4)</div>
+      <div class="prompt-box">${esc(prompt)}</div>
+    </div>`;
+  }
+
+  $('plan-resultado').innerHTML = html;
+}
+
+function renderErroresLexicos(errores) {
+  if (errores.length) {
+    const eb=$('error-body-lex'); eb.innerHTML='';
+    errores.forEach(e=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><code class="lexema-code" style="color:var(--red)">${esc(e.lexema)}</code></td>
+        <td>${e.linea}</td><td>${e.columna}</td><td>${esc(e.mensaje)}</td>`;
       eb.appendChild(tr);
     });
-    $('error-count-lex').textContent = errores_lexicos.length + ' error' + (errores_lexicos.length!==1?'es':'');
-    $('error-panel-lex').style.display = 'block';
-  } else {
-    $('error-panel-lex').style.display = 'none';
-  }
-
-  // ── Error sintactico ─────────────────────────
-  if (error_sintactico) {
-    $('error-sint-body').innerHTML = `
-      <div class="error-sint-msg">${esc(error_sintactico.mensaje)}</div>
-      <div class="error-sint-hint">
-        Se esperaba: <strong>${esc(error_sintactico.esperado)}</strong> &nbsp;·&nbsp;
-        Se encontro: <code>${esc(error_sintactico.encontrado)}</code> (${esc(error_sintactico.tipo_encontrado)})
-        &nbsp;·&nbsp; Linea ${error_sintactico.linea}, columna ${error_sintactico.columna}
-      </div>`;
-    $('error-panel-sint').style.display = 'block';
-  } else {
-    $('error-panel-sint').style.display = 'none';
-  }
-
-  // ── Status ──────────────────────────────────
-  if (resumen.exitoso) {
-    setStatus('ok', 'Cadena aceptada');
-  } else if ((errores_lexicos||[]).length > 0) {
-    setStatus('error', 'Error lexico');
-  } else if (error_sintactico) {
-    setStatus('warning', 'Error sintactico');
-  } else {
-    setStatus('idle', 'Analizando...');
-  }
+    $('error-count-lex').textContent=errores.length+' error'+(errores.length!==1?'es':'');
+    $('error-panel-lex').style.display='block';
+  } else { $('error-panel-lex').style.display='none'; }
 }
 
-// ── Arbol visual recursivo ──────────────────────────────────────
-function construirArbolVisual(nodo) {
-  const wrap = document.createElement('div');
-  wrap.className = 'tree-node-wrap';
-
-  const box = document.createElement('div');
-  const esTerminal = nodo.es_hoja;
-  const esProg     = nodo.nombre === 'PROGRAMA';
-  box.className = 'tree-box ' + (esProg ? 'programa' : esTerminal ? 'terminal' : 'nodo');
-  box.textContent = nodo.nombre;
-  wrap.appendChild(box);
-
-  if (nodo.hijos && nodo.hijos.length > 0) {
-    const childrenWrap = document.createElement('div');
-    childrenWrap.className = 'tree-children';
-    nodo.hijos.forEach(hijo => {
-      childrenWrap.appendChild(construirArbolVisual(hijo));
-    });
-    wrap.appendChild(childrenWrap);
-  }
-  return wrap;
+function renderErrorSintactico(e) {
+  if (e) {
+    $('error-sint-body').innerHTML=`<div class="error-sint-msg">${esc(e.mensaje)}</div>
+      <div class="error-sint-hint">Esperaba: <strong>${esc(e.esperado)}</strong> &nbsp;·&nbsp;
+      Encontró: <code>${esc(e.encontrado)}</code> &nbsp;·&nbsp; L${e.linea}:C${e.columna}</div>`;
+    $('error-panel-sint').style.display='block';
+  } else { $('error-panel-sint').style.display='none'; }
 }
 
-// ── Helpers ─────────────────────────────────────────────────────
-function esc(s) {
+function renderErrorSemantico(e) {
+  if (e) {
+    $('error-sem-code').textContent = e.codigo||'Fase 3';
+    $('error-sem-body').innerHTML=`<div class="error-sint-msg">${esc(e.mensaje)}</div>
+      <div class="error-sint-hint">Código: <strong>${esc(e.codigo)}</strong>
+      ${e.linea ? ` &nbsp;·&nbsp; Línea ${e.linea}` : ''}</div>`;
+    $('error-panel-sem').style.display='block';
+  } else { $('error-panel-sem').style.display='none'; }
+}
+
+function limpiarTodo() {
+  $('token-body').innerHTML='';
+  $('token-table').style.display='none'; $('empty-tokens').style.display='flex';
+  $('arbol-pre').style.display='none';  $('empty-arbol').style.display='flex';
+  $('tabla-simbolos-contenido').style.display='none'; $('empty-tabla').style.display='flex';
+  $('empty-plan').style.display='flex'; $('plan-listo').style.display='none';
+  $('plan-resultado').innerHTML='';
+  $('error-panel-lex').style.display='none';
+  $('error-panel-sint').style.display='none';
+  $('error-panel-sem').style.display='none';
+  $('stat-tokens').textContent=$('stat-errores').textContent='0';
+  $('stat-fase').textContent=$('stat-estado').textContent='—';
+  _ultimaTabla=null;
+}
+
+function esc(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Ctrl+Enter sigue funcionando para forzar un analisis
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey||e.metaKey) && e.key==='Enter') {
-    e.preventDefault(); clearTimeout(_debounce); correrAnalisis();
-  }
+document.addEventListener('keydown',e=>{
+  if ((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();clearTimeout(_debounce);correrAnalisis();}
 });
