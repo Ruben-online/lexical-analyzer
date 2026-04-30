@@ -140,9 +140,6 @@ class AnalizadorSemantico:
         elif nodo.tipo == "SENTENCIA_IMPRIMIR":
             self._visitar_imprimir(nodo)
 
-        elif nodo.tipo == "SENTENCIA_IMC":
-            self._visitar_imc(nodo)
-
     def _visitar_paciente(self, nodo: Nodo):
         # SEM-02: solo un paciente por programa
         if self.tabla.paciente_declarado():
@@ -158,8 +155,6 @@ class AnalizadorSemantico:
         for hijo in nodo.hijos:
             if hijo.tipo == "INSTRUCCION":
                 self._visitar_instruccion_paciente(hijo)
-            elif hijo.tipo == "SENTENCIA_IMC":
-                self._visitar_imc(hijo)
 
     def _visitar_instruccion_paciente(self, nodo: Nodo):
         etiqueta = nodo.hijos[0].valor.upper()
@@ -240,39 +235,20 @@ class AnalizadorSemantico:
                 desc = self._describir_accion(accion)
                 bloque.acciones.append(desc)
 
-    def _visitar_imc(self, nodo: Nodo):
-        """
-        SEM-12: IMC requiere que el paciente tenga PESO y TALLA declarados.
-        Como el lenguaje no maneja TALLA, el IMC se calcula con PESO / (EDAD proxy).
-        En nutrición real se usa peso(kg) / altura(m)^2.  Aquí usamos PESO y EDAD
-        como proxy suficiente; si falta cualquiera de los dos se lanza error.
-        """
-        # SEM-01: paciente debe estar declarado
-        if not self.tabla.paciente_declarado():
-            raise ErrorSemantico("SEM-01",
-                "IMC fue usado antes de declarar PACIENTE")
-
-        pac = self.tabla.paciente
-
-        # SEM-12: se necesita al menos PESO para calcular IMC
-        if pac.peso is None:
-            raise ErrorSemantico("SEM-12",
-                "IMC: no se puede calcular — falta declarar PESO del paciente")
-        if pac.edad is None:
-            raise ErrorSemantico("SEM-12",
-                "IMC: no se puede calcular — falta declarar EDAD del paciente")
-
-        # Cálculo aproximado: usamos una altura estimada según edad (adulto promedio 1.70m)
-        # En un compilador real se agregaría TALLA como token; aquí lo aproximamos.
-        altura_estimada = 1.70  # metros, valor por defecto razonable
-        pac.imc = pac.peso / (altura_estimada ** 2)
-
     def _visitar_si(self, nodo: Nodo):
-        # SEM-01
         if not self.tabla.paciente_declarado():
-            raise ErrorSemantico("SEM-01",
-                "El bloque SI fue declarado antes que PACIENTE")
-        # Visitar sentencias internas
+            raise ErrorSemantico("SEM-01", "El bloque SI fue declarado antes que PACIENTE")
+
+        # SEM-12: si la condición usa IMC, verificar que hay PESO declarado
+        condicion = next((h for h in nodo.hijos if h.tipo == "CONDICION"), None)
+        if condicion and condicion.hijos and condicion.hijos[0].valor.upper() == "IMC":
+            pac = self.tabla.paciente
+            if pac.peso is None:
+                raise ErrorSemantico("SEM-12",
+                    "Condición IMC: el paciente no tiene PESO declarado")
+            # Calcular y guardar el IMC (altura promedio 1.70m)
+            pac.imc = pac.peso / (1.70 ** 2)
+
         for hijo in nodo.hijos:
             if hijo.tipo == "SENTENCIAS":
                 self._visitar(hijo)

@@ -55,7 +55,6 @@ _INICIO_SENT = {
     TipoToken.TK_IMPRIMIR.value, TipoToken.EDAD.value,
     TipoToken.PESO.value,     TipoToken.OBJETIVO.value,
     TipoToken.RESTRICCION.value, TipoToken.ACCION.value,
-    TipoToken.IMC.value,
 }
 
 _OPS_COMP = {
@@ -118,7 +117,6 @@ class Parser:
         if t == TipoToken.DIETA.value:       return self._bloque_dieta()
         if t == TipoToken.TK_SI.value:       return self._sentencia_si()
         if t == TipoToken.TK_IMPRIMIR.value: return self._sentencia_imprimir()
-        if t == TipoToken.IMC.value:         return self._sentencia_imc()
         return self._instruccion()
 
     def _bloque_paciente(self) -> Nodo:
@@ -128,8 +126,7 @@ class Parser:
         nodo.agregar(self._hoja(self._consumir(TipoToken.TK_ID.value, "nombre del paciente")))
         nodo.agregar(self._hoja(self._consumir(TipoToken.TK_FIN_INSTRUC.value, "';'")))
         _datos = {TipoToken.EDAD.value, TipoToken.PESO.value,
-                  TipoToken.OBJETIVO.value, TipoToken.RESTRICCION.value,
-                  TipoToken.IMC.value}
+                TipoToken.OBJETIVO.value, TipoToken.RESTRICCION.value}
         while self._actual().tipo in _datos:
             nodo.agregar(self._instruccion())
         return nodo
@@ -137,12 +134,11 @@ class Parser:
     def _instruccion(self) -> Nodo:
         t = self._actual().tipo
         if t == TipoToken.RESTRICCION.value: return self._restriccion()
-        if t == TipoToken.IMC.value:         return self._sentencia_imc()
         if t in (TipoToken.EDAD.value, TipoToken.OBJETIVO.value):
             return self._instruccion_simple(t, TipoToken.TK_ID.value if t == TipoToken.OBJETIVO.value else TipoToken.TK_ENTERO.value, "valor")
         if t == TipoToken.PESO.value: return self._instruccion_numero(t)
-        raise ErrorSintactico("EDAD, PESO, OBJETIVO, RESTRICCION o IMC", self._actual())
-
+        raise ErrorSintactico("EDAD, PESO, OBJETIVO o RESTRICCION", self._actual())
+    
     def _instruccion_simple(self, kw, tipo_val, desc) -> Nodo:
         nodo = Nodo(tipo="INSTRUCCION")
         nodo.agregar(self._hoja(self._consumir(kw)))
@@ -178,13 +174,6 @@ class Parser:
             nodo.agregar(self._hoja(self._consumir(TipoToken.TK_LT.value, "'<'")))
             nodo.agregar(self._hoja(self._consumir(TipoToken.TK_ID.value, "tipo restricción")))
             nodo.agregar(self._hoja(self._consumir(TipoToken.TK_GT.value, "'>'")))
-        nodo.agregar(self._hoja(self._consumir(TipoToken.TK_FIN_INSTRUC.value, "';'")))
-        return nodo
-
-    def _sentencia_imc(self) -> Nodo:
-        """IMC ;  — calcula automáticamente el IMC del paciente"""
-        nodo = Nodo(tipo="SENTENCIA_IMC")
-        nodo.agregar(self._hoja(self._consumir(TipoToken.IMC.value)))
         nodo.agregar(self._hoja(self._consumir(TipoToken.TK_FIN_INSTRUC.value, "';'")))
         return nodo
 

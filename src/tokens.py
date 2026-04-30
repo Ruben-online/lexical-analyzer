@@ -11,8 +11,7 @@ class TipoToken(Enum):
     ACCION      = "ACCION"
     RECETA      = "RECETA"
     RUTINA      = "RUTINA"
-    DIETA       = "DIETA"
-    IMC         = "IMC"          # calcula IMC automáticamente
+    DIETA       = "DIETA"        # calcula IMC automáticamente
 
     # ── Control de flujo ─────────────────────────
     TK_INICIO    = "TK_INICIO"
@@ -54,7 +53,6 @@ PALABRAS_RESERVADAS: dict[str, TipoToken] = {
     "RECETA":      TipoToken.RECETA,
     "RUTINA":      TipoToken.RUTINA,
     "DIETA":       TipoToken.DIETA,
-    "IMC":         TipoToken.IMC,
 
     "INICIO":    TipoToken.TK_INICIO,
     "FIN":       TipoToken.TK_FIN,
@@ -69,7 +67,6 @@ CATEGORIAS: dict[str, list[TipoToken]] = {
         TipoToken.PACIENTE, TipoToken.EDAD, TipoToken.PESO,
         TipoToken.OBJETIVO, TipoToken.RESTRICCION, TipoToken.ACCION,
         TipoToken.RECETA, TipoToken.RUTINA, TipoToken.DIETA,
-        TipoToken.IMC,
         TipoToken.TK_INICIO, TipoToken.TK_FIN,
         TipoToken.TK_SI, TipoToken.TK_ENTONCES,
         TipoToken.TK_IMPRIMIR,

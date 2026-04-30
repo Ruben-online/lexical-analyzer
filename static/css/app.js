@@ -2,39 +2,26 @@
 
 const EJEMPLOS = {
   valido: `INICIO
-    PACIENTE: Sofia;
-    EDAD: 25;
-    PESO: 65.5;
-    RESTRICCION: <lumbar>, <rodilla>;
-    OBJETIVO: bajar_grasa;
-    IMC;
+      PACIENTE: Sofia;
+      EDAD: 25;
+      PESO: 65.5;
+      RESTRICCION: <lumbar>, <rodilla>;
+      OBJETIVO: bajar_grasa;
 
-    SI PESO > 60 ENTONCES
-        RUTINA: rutina_intensa;
-            ACCION: flexiones * 10;
-            ACCION: sentadillas * 15;
-            ACCION: proteina + carbohidrato;
-        FIN
-    FIN
+      SI IMC > 25 ENTONCES
+          RUTINA: rutina_intensa;
+              ACCION: flexiones * 10;
+              ACCION: sentadillas * 15;
+          FIN
+      FIN
 
-    DIETA: dieta_proteica;
-        ACCION: desayuno_avena;
-        ACCION: almuerzo_pollo;
-    FIN
+      DIETA: dieta_proteica;
+          ACCION: desayuno_avena;
+          ACCION: almuerzo_pollo;
+      FIN
 
-    IMPRIMIR rutina_intensa;
-FIN`,
-  errores: `INICIO
-    RUTINA: rutina_sin_paciente;
-        ACCION: flexiones;
-    FIN
-    PACIENTE: Carlos;
-FIN`,
-  imc_error: `INICIO
-    PACIENTE: Marco;
-    OBJETIVO: bajar_grasa;
-    IMC;
-FIN`
+      IMPRIMIR rutina_intensa;
+  FIN`,
 };
 
 const $ = id => document.getElementById(id);
