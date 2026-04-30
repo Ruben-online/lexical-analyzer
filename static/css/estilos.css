@@ -428,3 +428,23 @@ body {
   font-family: 'Courier New', monospace; font-size: 11px; color: #a8d8a8;
   white-space: pre-wrap; max-height: 200px; overflow-y: auto; margin-top: 8px; }
 
+
+/* ── Error zone ────────────────────────────────────────── */
+#error-zone { display: flex; flex-direction: column; gap: 12px;
+  margin-top: 12px; }
+
+/* ── IMC badges ────────────────────────────────────────── */
+.imc-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+}
+.imc-bajo      { background: #E3F2FD; color: #0D47A1; }
+.imc-normal    { background: #E8F5E9; color: #1B5E20; }
+.imc-sobrepeso { background: #FFF3E0; color: #7B3800; }
+.imc-obesidad  { background: #FFEBEE; color: #B71C1C; }
+
+/* ── Error sint body padding ───────────────────────────── */
+.error-sint-body { padding: 12px 16px; }

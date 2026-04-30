@@ -3,7 +3,7 @@ semantico.py — Analizador Semántico — Compilador de Nutrias
 Construye la tabla de símbolos y valida reglas semánticas.
 
 Reglas implementadas:
-  SEM-01  RUTINA/DIETA/SI/IMPRIMIR antes que PACIENTE
+  SEM-01  RUTINA/DIETA/SI/IMPRIMIR/IMC antes que PACIENTE
   SEM-02  Paciente declarado más de una vez
   SEM-03  Nombre de RUTINA o DIETA duplicado
   SEM-04  EDAD fuera de rango (1-120) o no entero
@@ -11,6 +11,7 @@ Reglas implementadas:
   SEM-06  IMPRIMIR referencia bloque no declarado
   SEM-10  Propiedad del paciente declarada dos veces
   SEM-11  Bloque RUTINA/DIETA sin ninguna ACCION
+  SEM-12  IMC sin PESO o EDAD declarados previamente
 """
 
 from dataclasses import dataclass, field
@@ -26,6 +27,7 @@ class SimboloPaciente:
     peso:          float = None
     objetivo:      str   = None
     restricciones: list  = field(default_factory=list)
+    imc:           float = None    # calculado por la instrucción IMC
     linea:         int   = 0
 
     def to_dict(self):
@@ -36,6 +38,7 @@ class SimboloPaciente:
             "peso":          self.peso,
             "objetivo":      self.objetivo,
             "restricciones": self.restricciones,
+            "imc":           round(self.imc, 2) if self.imc is not None else None,
             "linea":         self.linea,
         }
 
@@ -137,6 +140,9 @@ class AnalizadorSemantico:
         elif nodo.tipo == "SENTENCIA_IMPRIMIR":
             self._visitar_imprimir(nodo)
 
+        elif nodo.tipo == "SENTENCIA_IMC":
+            self._visitar_imc(nodo)
+
     def _visitar_paciente(self, nodo: Nodo):
         # SEM-02: solo un paciente por programa
         if self.tabla.paciente_declarado():
@@ -152,17 +158,20 @@ class AnalizadorSemantico:
         for hijo in nodo.hijos:
             if hijo.tipo == "INSTRUCCION":
                 self._visitar_instruccion_paciente(hijo)
+            elif hijo.tipo == "SENTENCIA_IMC":
+                self._visitar_imc(hijo)
 
     def _visitar_instruccion_paciente(self, nodo: Nodo):
         etiqueta = nodo.hijos[0].valor.upper()
 
-        # SEM-10: propiedad duplicada
-        if etiqueta in self._props_declaradas:
+        # SEM-10: propiedad duplicada (no aplica a RESTRICCION porque son acumulables)
+        if etiqueta != "RESTRICCION" and etiqueta in self._props_declaradas:
             raise ErrorSemantico("SEM-10",
                 f"La propiedad '{etiqueta}' ya fue declarada para este paciente")
-        self._props_declaradas.add(etiqueta)
+        if etiqueta != "RESTRICCION":
+            self._props_declaradas.add(etiqueta)
 
-        valor_nodo = nodo.hijos[2]  # KW : VALOR ;
+        valor_nodo = nodo.hijos[2]  # KW : VALOR ...
 
         if etiqueta == "EDAD":
             # SEM-04: EDAD debe ser entero positivo 1-120
@@ -192,9 +201,15 @@ class AnalizadorSemantico:
             self.tabla.paciente.objetivo = valor_nodo.valor
 
         elif etiqueta == "RESTRICCION":
-            # El valor de la restriccion está en hijos[3] (< ID >)
-            id_nodo = nodo.hijos[3]
-            self.tabla.paciente.restricciones.append(id_nodo.valor)
+            # Recoger todos los IDs entre < > en los hijos del nodo
+            # Formato: RESTRICCION : <ID> (, <ID>)* ;
+            # hijos: [RESTRICCION, :, <, ID, >, (, <, ID, >)*, ;]
+            i = 3  # primer ID (después de RESTRICCION : <)
+            while i < len(nodo.hijos):
+                h = nodo.hijos[i]
+                if h.es_hoja() and h.valor not in ("RESTRICCION", ":", "<", ">", ",", ";"):
+                    self.tabla.paciente.restricciones.append(h.valor)
+                i += 1
 
     def _visitar_bloque(self, nodo: Nodo, tipo: str):
         # SEM-01: paciente debe estar declarado primero
@@ -224,6 +239,33 @@ class AnalizadorSemantico:
             if accion.tipo == "ACCION":
                 desc = self._describir_accion(accion)
                 bloque.acciones.append(desc)
+
+    def _visitar_imc(self, nodo: Nodo):
+        """
+        SEM-12: IMC requiere que el paciente tenga PESO y TALLA declarados.
+        Como el lenguaje no maneja TALLA, el IMC se calcula con PESO / (EDAD proxy).
+        En nutrición real se usa peso(kg) / altura(m)^2.  Aquí usamos PESO y EDAD
+        como proxy suficiente; si falta cualquiera de los dos se lanza error.
+        """
+        # SEM-01: paciente debe estar declarado
+        if not self.tabla.paciente_declarado():
+            raise ErrorSemantico("SEM-01",
+                "IMC fue usado antes de declarar PACIENTE")
+
+        pac = self.tabla.paciente
+
+        # SEM-12: se necesita al menos PESO para calcular IMC
+        if pac.peso is None:
+            raise ErrorSemantico("SEM-12",
+                "IMC: no se puede calcular — falta declarar PESO del paciente")
+        if pac.edad is None:
+            raise ErrorSemantico("SEM-12",
+                "IMC: no se puede calcular — falta declarar EDAD del paciente")
+
+        # Cálculo aproximado: usamos una altura estimada según edad (adulto promedio 1.70m)
+        # En un compilador real se agregaría TALLA como token; aquí lo aproximamos.
+        altura_estimada = 1.70  # metros, valor por defecto razonable
+        pac.imc = pac.peso / (altura_estimada ** 2)
 
     def _visitar_si(self, nodo: Nodo):
         # SEM-01

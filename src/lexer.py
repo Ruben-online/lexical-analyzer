@@ -75,6 +75,7 @@ _SPEC = [
     ("TK_FIN_INSTRUC", r";"),
     ("TK_LT",          r"<"),
     ("TK_GT",          r">"),
+    ("TK_COMA",        r","),
 
     # ── 8. Error específico ─────────────────
     ("_IGUAL_SIMPLE",  r"="),

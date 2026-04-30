@@ -5,8 +5,9 @@ const EJEMPLOS = {
     PACIENTE: Sofia;
     EDAD: 25;
     PESO: 65.5;
-    RESTRICCION: <lumbar>;
+    RESTRICCION: <lumbar>, <rodilla>;
     OBJETIVO: bajar_grasa;
+    IMC;
 
     SI PESO > 60 ENTONCES
         RUTINA: rutina_intensa;
@@ -28,6 +29,11 @@ FIN`,
         ACCION: flexiones;
     FIN
     PACIENTE: Carlos;
+FIN`,
+  imc_error: `INICIO
+    PACIENTE: Marco;
+    OBJETIVO: bajar_grasa;
+    IMC;
 FIN`
 };
 
@@ -210,8 +216,9 @@ function renderTablaSimbolos(tabla) {
         <div class="ts-prop">Tipo: <span>${p.tipo}</span></div>
         ${p.edad  ? `<div class="ts-prop">Edad: <span>${p.edad} años</span></div>` : ''}
         ${p.peso  ? `<div class="ts-prop">Peso: <span>${p.peso} kg</span></div>` : ''}
+        ${p.imc !== null && p.imc !== undefined ? `<div class="ts-prop">IMC: <span class="imc-badge ${clasificarIMC(p.imc)}">${p.imc} — ${textoIMC(p.imc)}</span></div>` : ''}
         ${p.objetivo ? `<div class="ts-prop">Objetivo: <span>${esc(p.objetivo)}</span></div>` : ''}
-        ${p.restricciones&&p.restricciones.length ? `<div class="ts-prop">Restricciones: <span>${p.restricciones.join(', ')}</span></div>` : ''}
+        ${p.restricciones&&p.restricciones.length ? `<div class="ts-prop">Restricciones: <span>${p.restricciones.map(r=>`<code class="lexema-code">${esc(r)}</code>`).join(' ')}</span></div>` : ''}
         <div class="ts-prop">Declarado en: <span>línea ${p.linea}</span></div>
       </div>
     </div>`;
@@ -343,6 +350,20 @@ function limpiarTodo() {
   $('stat-tokens').textContent=$('stat-errores').textContent='0';
   $('stat-fase').textContent=$('stat-estado').textContent='—';
   _ultimaTabla=null;
+}
+
+function clasificarIMC(imc) {
+  if (imc < 18.5) return 'imc-bajo';
+  if (imc < 25)   return 'imc-normal';
+  if (imc < 30)   return 'imc-sobrepeso';
+  return 'imc-obesidad';
+}
+
+function textoIMC(imc) {
+  if (imc < 18.5) return 'Bajo peso';
+  if (imc < 25)   return 'Normal';
+  if (imc < 30)   return 'Sobrepeso';
+  return 'Obesidad';
 }
 
 function esc(s){

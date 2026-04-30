@@ -14,22 +14,36 @@
       <div><div class="brand-name">Vitally</div><div class="brand-sub">Compilador de Nutrias</div></div>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section">FASES</div>
+      <div class="nav-section">ANÁLISIS</div>
       <a href="#" class="nav-item active" onclick="cambiarTab('lexico');return false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        Fase 1 — Léxico
+        Léxico
       </a>
       <a href="#" class="nav-item" onclick="cambiarTab('sintactico');return false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Fase 2 — Sintáctico
+        Sintáctico
       </a>
       <a href="#" class="nav-item" onclick="cambiarTab('semantico');return false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Fase 3 — Semántico
+        Semántico
       </a>
       <a href="#" class="nav-item" onclick="cambiarTab('plan');return false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        Fase 4 — Plan IA
+        Plan IA
+      </a>
+
+      <div class="nav-section" style="margin-top:16px">HERRAMIENTAS</div>
+      <a href="#" class="nav-item" onclick="cargarEjemplo('valido');return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Ejemplo válido
+      </a>
+      <a href="#" class="nav-item" onclick="cargarEjemplo('errores');return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Ejemplo con errores
+      </a>
+      <a href="#" class="nav-item" onclick="limpiar();return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        Limpiar
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -44,16 +58,9 @@
         <h1 class="page-title" id="page-title">Compilador de Nutrias</h1>
         <p class="page-sub" id="page-sub">Análisis en tiempo real · Fases 1–4</p>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="status-pill" id="status-pill">
-          <span class="status-dot" id="status-dot"></span>
-          <span id="status-text">Esperando...</span>
-        </div>
-        <div class="panel-actions">
-          <button class="btn-ghost" onclick="cargarEjemplo('valido')">Ejemplo válido</button>
-          <button class="btn-ghost" onclick="cargarEjemplo('errores')">Con errores</button>
-          <button class="btn-ghost" onclick="limpiar()">Limpiar</button>
-        </div>
+      <div class="status-pill" id="status-pill">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Esperando...</span>
       </div>
     </header>
 
@@ -86,7 +93,7 @@
         <div class="editor-wrapper">
           <div class="line-numbers" id="line-numbers">1</div>
           <textarea id="editor" class="editor"
-            placeholder="INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;  PESO: 65.5;&#10;  OBJETIVO: bajar_grasa;&#10;&#10;  RUTINA: mi_rutina;&#10;    ACCION: flexiones * 10;&#10;  FIN&#10;&#10;  IMPRIMIR mi_rutina;&#10;FIN"
+            placeholder="INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;  PESO: 65.5;&#10;  OBJETIVO: bajar_grasa;&#10;  IMC;&#10;&#10;  RUTINA: mi_rutina;&#10;    ACCION: flexiones * 10;&#10;  FIN&#10;&#10;  IMPRIMIR mi_rutina;&#10;FIN"
             spellcheck="false"
             oninput="onEditorInput()"
             onscroll="sincronizarScroll()"></textarea>
@@ -155,33 +162,35 @@
       </section>
     </div>
 
-    <!-- Error panels -->
-    <section class="error-panel" id="error-panel-lex" style="display:none">
-      <div class="panel-header error-header">
-        <span class="panel-title">⚠ Errores léxicos</span>
-        <span class="error-count" id="error-count-lex"></span>
-      </div>
-      <table class="token-table">
-        <thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead>
-        <tbody id="error-body-lex"></tbody>
-      </table>
-    </section>
+    <!-- Error panels — unificados al final, sin repetición -->
+    <div id="error-zone">
+      <section class="error-panel" id="error-panel-lex" style="display:none">
+        <div class="panel-header error-header">
+          <span class="panel-title">⚠ Errores léxicos</span>
+          <span class="error-count" id="error-count-lex"></span>
+        </div>
+        <table class="token-table">
+          <thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead>
+          <tbody id="error-body-lex"></tbody>
+        </table>
+      </section>
 
-    <section class="error-panel error-sint" id="error-panel-sint" style="display:none">
-      <div class="panel-header error-header">
-        <span class="panel-title">⚠ Error sintáctico</span>
-        <span class="error-count" id="error-sint-fase">Fase 2</span>
-      </div>
-      <div class="error-sint-body" id="error-sint-body"></div>
-    </section>
+      <section class="error-panel error-sint" id="error-panel-sint" style="display:none">
+        <div class="panel-header error-header">
+          <span class="panel-title">⚠ Error sintáctico</span>
+          <span class="error-count" id="error-sint-fase">Fase 2</span>
+        </div>
+        <div class="error-sint-body" id="error-sint-body"></div>
+      </section>
 
-    <section class="error-panel error-sint" id="error-panel-sem" style="display:none">
-      <div class="panel-header error-header">
-        <span class="panel-title">⚠ Error semántico</span>
-        <span class="error-count" id="error-sem-code">Fase 3</span>
-      </div>
-      <div class="error-sint-body" id="error-sem-body"></div>
-    </section>
+      <section class="error-panel error-sint" id="error-panel-sem" style="display:none">
+        <div class="panel-header error-header">
+          <span class="panel-title">⚠ Error semántico</span>
+          <span class="error-count" id="error-sem-code">Fase 3</span>
+        </div>
+        <div class="error-sint-body" id="error-sem-body"></div>
+      </section>
+    </div>
 
   </main>
 
