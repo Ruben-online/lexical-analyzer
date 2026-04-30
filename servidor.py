@@ -102,7 +102,7 @@ def compilar():
 
 if __name__ == "__main__":
     print("\n  🦦 Compilador de Nutrias — Vitally")
-    print("  Léxico + Sintáctico + Semántico + Gemini")
+    print("  Analizador Lexico, Sintactico, Semantico y Generador (Compilado)")
     print("  ─────────────────────────────────────────")
     print("  http://localhost:5000\n")
     app.run(debug=True, port=5000)

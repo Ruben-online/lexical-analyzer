@@ -111,7 +111,7 @@ async function generarPlan() {
   btn.disabled = true;
   btn.textContent = '⏳ Generando con Gemini...';
   $('plan-resultado').innerHTML = `<div class="loading-gemini">
-    <span class="spinner">🤖</span>
+    <div class="spinner"></div>
     <p>Gemini está generando el plan clínico personalizado...</p>
     <p style="font-size:11px;margin-top:8px">Esto puede tomar 5-15 segundos</p>
   </div>`;
@@ -132,7 +132,7 @@ async function generarPlan() {
     $('plan-resultado').innerHTML = `<div class="error-sint-msg">Error de conexión: ${e.message}</div>`;
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '🤖 Generar Plan Clínico con Gemini';
+    btn.innerHTML = 'Generar Plan Clínico con Gemini';
   }
 }
 
@@ -234,7 +234,7 @@ function renderTablaSimbolos(tabla) {
 function renderPlan(plan, prompt) {
   const pc = plan.plan_clinico || plan;
   let html = `<div class="plan-header">
-    <h2>🏥 Plan Clínico — ${esc(pc.paciente||'Paciente')}</h2>
+    <h2>Plan Clínico — ${esc(pc.paciente||'Paciente')}</h2>
     <p>${esc(pc.objetivo_principal||'')} · Próxima revisión: ${esc(pc.proxima_revision||'')}</p>
   </div>`;
 
@@ -289,7 +289,7 @@ function renderPlan(plan, prompt) {
 
   if (prompt) {
     html+=`<div class="plan-seccion">
-      <div class="plan-seccion-titulo">🔍 Prompt generado (Fase 4)</div>
+      <div class="plan-seccion-titulo">Prompt generado</div>
       <div class="prompt-box">${esc(prompt)}</div>
     </div>`;
   }
