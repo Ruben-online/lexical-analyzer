@@ -3,15 +3,16 @@ semantico.py — Analizador Semántico — Compilador de Nutrias
 Construye la tabla de símbolos y valida reglas semánticas.
 
 Reglas implementadas:
-  SEM-01  RUTINA/DIETA/SI/IMPRIMIR/IMC antes que PACIENTE
+  SEM-01  RUTINA/DIETA/SI/IMPRIMIR antes que PACIENTE
   SEM-02  Paciente declarado más de una vez
   SEM-03  Nombre de RUTINA o DIETA duplicado
   SEM-04  EDAD fuera de rango (1-120) o no entero
   SEM-05  PESO fuera de rango (1.0-700.0)
   SEM-06  IMPRIMIR referencia bloque no declarado
+  SEM-07  ALTURA fuera de rango (0.50-2.50 m)
   SEM-10  Propiedad del paciente declarada dos veces
   SEM-11  Bloque RUTINA/DIETA sin ninguna ACCION
-  SEM-12  IMC sin PESO o EDAD declarados previamente
+  SEM-12  IMC usado sin PESO o ALTURA declarados previamente
 """
 
 from dataclasses import dataclass, field
@@ -29,6 +30,7 @@ class SimboloPaciente:
     restricciones: list  = field(default_factory=list)
     imc:           float = None    # calculado por la instrucción IMC
     linea:         int   = 0
+    altura:        float = None
 
     def to_dict(self):
         return {
@@ -38,7 +40,9 @@ class SimboloPaciente:
             "peso":          self.peso,
             "objetivo":      self.objetivo,
             "restricciones": self.restricciones,
-            "imc":           round(self.imc, 2) if self.imc is not None else None,
+            # Agrega esta línea en to_dict() de SimboloPaciente:
+            "altura": self.altura,
+            "imc":    round(self.imc, 2) if self.imc is not None else None,
             "linea":         self.linea,
         }
 
@@ -205,6 +209,16 @@ class AnalizadorSemantico:
                 if h.es_hoja() and h.valor not in ("RESTRICCION", ":", "<", ">", ",", ";"):
                     self.tabla.paciente.restricciones.append(h.valor)
                 i += 1
+        elif etiqueta == "ALTURA":
+            try:
+                altura = float(valor_nodo.valor)
+                if not (0.5 <= altura <= 2.5):
+                    raise ErrorSemantico("SEM-07",
+                        f"ALTURA fuera de rango válido (0.50–2.50 m): {altura}")
+                self.tabla.paciente.altura = altura
+            except ValueError:
+                raise ErrorSemantico("SEM-07",
+                    f"ALTURA requiere un número, se encontró: '{valor_nodo.valor}'")
 
     def _visitar_bloque(self, nodo: Nodo, tipo: str):
         # SEM-01: paciente debe estar declarado primero
@@ -241,14 +255,17 @@ class AnalizadorSemantico:
 
         # SEM-12: si la condición usa IMC, verificar que hay PESO declarado
         condicion = next((h for h in nodo.hijos if h.tipo == "CONDICION"), None)
+
         if condicion and condicion.hijos and condicion.hijos[0].valor.upper() == "IMC":
             pac = self.tabla.paciente
             if pac.peso is None:
                 raise ErrorSemantico("SEM-12",
-                    "Condición IMC: el paciente no tiene PESO declarado")
-            # Calcular y guardar el IMC (altura promedio 1.70m)
-            pac.imc = pac.peso / (1.70 ** 2)
-
+                    "IMC requiere que el paciente tenga PESO declarado")
+            if pac.altura is None:
+                raise ErrorSemantico("SEM-12",
+                    "IMC requiere que el paciente tenga ALTURA declarada")
+            # Fórmula real: kg / m²
+            pac.imc = pac.peso / (pac.altura ** 2)
         for hijo in nodo.hijos:
             if hijo.tipo == "SENTENCIAS":
                 self._visitar(hijo)

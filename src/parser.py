@@ -126,7 +126,8 @@ class Parser:
         nodo.agregar(self._hoja(self._consumir(TipoToken.TK_ID.value, "nombre del paciente")))
         nodo.agregar(self._hoja(self._consumir(TipoToken.TK_FIN_INSTRUC.value, "';'")))
         _datos = {TipoToken.EDAD.value, TipoToken.PESO.value,
-                TipoToken.OBJETIVO.value, TipoToken.RESTRICCION.value}
+                TipoToken.ALTURA.value, TipoToken.OBJETIVO.value,
+                TipoToken.RESTRICCION.value}
         while self._actual().tipo in _datos:
             nodo.agregar(self._instruccion())
         return nodo
@@ -136,7 +137,8 @@ class Parser:
         if t == TipoToken.RESTRICCION.value: return self._restriccion()
         if t in (TipoToken.EDAD.value, TipoToken.OBJETIVO.value):
             return self._instruccion_simple(t, TipoToken.TK_ID.value if t == TipoToken.OBJETIVO.value else TipoToken.TK_ENTERO.value, "valor")
-        if t == TipoToken.PESO.value: return self._instruccion_numero(t)
+        if t == TipoToken.PESO.value or t == TipoToken.ALTURA.value:
+            return self._instruccion_numero(t)
         raise ErrorSintactico("EDAD, PESO, OBJETIVO o RESTRICCION", self._actual())
     
     def _instruccion_simple(self, kw, tipo_val, desc) -> Nodo:

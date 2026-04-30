@@ -5,6 +5,7 @@ const EJEMPLOS = {
       PACIENTE: Sofia;
       EDAD: 25;
       PESO: 65.5;
+      ALTURA: 1.68;
       RESTRICCION: <lumbar>, <rodilla>;
       OBJETIVO: bajar_grasa;
 
