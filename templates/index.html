@@ -3,45 +3,46 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compilador de Nutrias — Vitally</title>
+  <title>Compilador de Nutrias - Vitally</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="/static/css/estilos.css">
 </head>
 <body>
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <span class="brand-icon">🦦</span>
-      <div><div class="brand-name">Vitally</div><div class="brand-sub">Compilador de Nutrias</div></div>
+      <span class="brand-icon"><i class="fa-solid fa-leaf"></i></span>
+      <div>
+        <div class="brand-name">Vitally</div>
+        <div class="brand-sub">Compilador de Nutrias</div>
+      </div>
     </div>
+
     <nav class="sidebar-nav">
       <div class="nav-section">MODO</div>
       <a href="#" class="nav-item active" id="nav-formulario" onclick="setModo('formulario');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/></svg>
+        <i class="fa-regular fa-rectangle-list"></i>
         Modo Fácil
       </a>
       <a href="#" class="nav-item" id="nav-codigo" onclick="setModo('codigo');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <i class="fa-solid fa-code"></i>
         Modo Experto
       </a>
-      <div class="nav-section" style="margin-top:16px">FASES</div>
-      <a href="#" class="nav-item" onclick="mostrarResultado('tokens');return false">Fase 1 — Tokens</a>
-      <a href="#" class="nav-item" onclick="mostrarResultado('arbol');return false">Fase 2 — Árbol</a>
-      <a href="#" class="nav-item" onclick="mostrarResultado('tabla');return false">Fase 3 — Semántico</a>
-      <a href="#" class="nav-item" onclick="mostrarResultado('plan');return false">Fase 4 — Plan IA</a>
     </nav>
+
     <div class="sidebar-footer">
       <div class="user-badge">N</div>
-      <div><div class="user-name">Dra. Nutricionista</div><div class="user-role">Compiladores — URL</div></div>
+      <div>
+        <div class="user-name">Dra. Nutricionista</div>
+        <div class="user-role">Compiladores - URL</div>
+      </div>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
     <header class="topbar">
       <div>
-        <h1 class="page-title" id="page-title">Modo Fácil — Formulario de Paciente</h1>
-        <p class="page-sub">Llena el formulario y el compilador hace el resto</p>
+        <h1 class="page-title" id="page-title">Modo Fácil - Formulario de Paciente</h1>
+        <p class="page-sub">Llena el formulario y el compilador valida los datos antes de enviarlos a IA.</p>
       </div>
       <div class="topbar-right">
         <div class="status-pill">
@@ -51,38 +52,53 @@
       </div>
     </header>
 
-    <!-- STATS -->
     <section class="stats-row">
-      <div class="stat-card"><div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div><div class="stat-label">Tokens</div><div class="stat-value" id="stat-tokens">0</div></div></div>
-      <div class="stat-card"><div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="stat-label">Fase activa</div><div class="stat-value" id="stat-fase">—</div></div></div>
-      <div class="stat-card"><div class="stat-icon" id="stat-err-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="stat-label">Errores</div><div class="stat-value" id="stat-errores">0</div></div></div>
-      <div class="stat-card"><div class="stat-icon" id="stat-estado-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="stat-label">Estado</div><div class="stat-value" id="stat-estado">—</div></div></div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-code"></i></div>
+        <div><div class="stat-label">Tokens</div><div class="stat-value" id="stat-tokens">0</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-regular fa-clock"></i></div>
+        <div class="phase-stat-body">
+          <div class="stat-label" id="phase-detail">Fase activa</div>
+          <div class="stat-value phase-value" id="stat-fase">-</div>
+          <div class="phase-track" id="phase-track" aria-label="Progreso del compilador">
+            <span class="phase-dot" data-phase="lexica" title="Léxico"></span>
+            <span class="phase-dot" data-phase="sintactica" title="Sintáctico"></span>
+            <span class="phase-dot" data-phase="semantica" title="Semántico"></span>
+            <span class="phase-dot" data-phase="generacion" title="Generación IA"></span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" id="stat-err-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+        <div><div class="stat-label">Errores</div><div class="stat-value" id="stat-errores">0</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" id="stat-estado-icon"><i class="fa-solid fa-check"></i></div>
+        <div><div class="stat-label">Estado</div><div class="stat-value" id="stat-estado">-</div></div>
+      </div>
     </section>
 
-    <!-- WORKSPACE -->
     <div class="workspace" id="workspace">
-
-      <!-- PANEL IZQUIERDO: Formulario o Editor -->
       <section class="panel" id="panel-izq">
-
-        <!-- MODO FÁCIL: Formulario -->
         <div id="modo-formulario">
           <div class="panel-header">
-            <span class="panel-title">📋 Datos del Paciente</span>
+            <span class="panel-title"><i class="fa-regular fa-clipboard"></i> Datos del Paciente</span>
             <div class="panel-actions">
               <button class="btn-ghost" onclick="cargarEjemplo()">Ejemplo</button>
               <button class="btn-ghost" onclick="limpiarFormulario()">Limpiar</button>
             </div>
           </div>
+
           <div class="form-scroll">
-            <!-- Datos básicos -->
             <div class="form-section">
-              <div class="form-section-title">👤 Información Personal</div>
+              <div class="form-section-title"><i class="fa-solid fa-user"></i> Información Personal</div>
               <div class="form-row">
                 <div class="form-group">
                   <label>Nombre del paciente *</label>
                   <input type="text" id="f-nombre" placeholder="Ej: Sofia_Garcia" oninput="generarCodigo()">
-                  <span class="form-hint">Sin espacios, usa guión bajo</span>
+                  <span class="form-hint">Sin espacios, usa guion bajo.</span>
                 </div>
               </div>
               <div class="form-row two-cols">
@@ -97,9 +113,8 @@
               </div>
             </div>
 
-            <!-- Objetivo y nivel -->
             <div class="form-section">
-              <div class="form-section-title">🎯 Objetivo y Nivel</div>
+              <div class="form-section-title"><i class="fa-solid fa-bullseye"></i> Objetivo y Nivel</div>
               <div class="form-row">
                 <div class="form-group">
                   <label>Objetivo principal *</label>
@@ -126,9 +141,8 @@
               </div>
             </div>
 
-            <!-- Restricciones -->
             <div class="form-section">
-              <div class="form-section-title">⚕️ Restricciones Médicas</div>
+              <div class="form-section-title"><i class="fa-solid fa-stethoscope"></i> Restricciones Médicas</div>
               <div class="restricciones-grid">
                 <label class="check-opt"><input type="checkbox" value="lumbar" onchange="generarCodigo()"> Zona lumbar</label>
                 <label class="check-opt"><input type="checkbox" value="rodilla" onchange="generarCodigo()"> Rodilla</label>
@@ -142,9 +156,8 @@
               </div>
             </div>
 
-            <!-- Tipo de ejercicios -->
             <div class="form-section">
-              <div class="form-section-title">💪 Tipos de Ejercicio</div>
+              <div class="form-section-title"><i class="fa-solid fa-dumbbell"></i> Tipos de Ejercicio</div>
               <div class="restricciones-grid">
                 <label class="check-opt"><input type="checkbox" value="cardio" onchange="generarCodigo()" checked> Cardio</label>
                 <label class="check-opt"><input type="checkbox" value="fuerza" onchange="generarCodigo()" checked> Fuerza</label>
@@ -155,9 +168,8 @@
               </div>
             </div>
 
-            <!-- Dieta -->
             <div class="form-section">
-              <div class="form-section-title">🥗 Plan de Alimentación</div>
+              <div class="form-section-title"><i class="fa-solid fa-bowl-food"></i> Plan de Alimentación</div>
               <div class="form-row">
                 <div class="form-group">
                   <label>Tipo de dieta</label>
@@ -174,15 +186,14 @@
             </div>
 
             <button class="btn-generar-plan" id="btn-generar" onclick="generarPlan()">
-              🤖 Generar Plan Clínico con IA
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Generar Plan Clínico con IA
             </button>
           </div>
         </div>
 
-        <!-- MODO EXPERTO: Editor -->
-        <div id="modo-codigo" style="display:none; height:100%; display:none; flex-direction:column">
+        <div id="modo-codigo" style="display:none; height:100%; flex-direction:column">
           <div class="panel-header">
-            <span class="panel-title">Código fuente (.nut)</span>
+            <span class="panel-title"><i class="fa-solid fa-terminal"></i> Código fuente (.nut)</span>
             <div class="panel-actions">
               <button class="btn-ghost" onclick="cargarEjemploEditor('valido')">Ejemplo válido</button>
               <button class="btn-ghost" onclick="cargarEjemploEditor('error')">Con error</button>
@@ -199,39 +210,36 @@
           </div>
           <div class="editor-footer">
             <span class="hint-text">Análisis automático en tiempo real · Ctrl+Enter para forzar</span>
-            <button class="btn-generar-small" onclick="generarPlan()">🤖 Generar Plan</button>
+            <button class="btn-generar-small" onclick="generarPlan()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generar Plan</button>
           </div>
         </div>
       </section>
 
-      <!-- PANEL DERECHO: Código generado + Resultados -->
       <section class="panel" id="panel-der">
         <div class="panel-header">
           <div class="tab-bar">
-            <button class="tab active" id="tab-codigo-gen" onclick="mostrarResultado('codigo-gen')">Código .nut</button>
-            <button class="tab" id="tab-tokens"    onclick="mostrarResultado('tokens')">Tokens</button>
-            <button class="tab" id="tab-arbol"     onclick="mostrarResultado('arbol')">Árbol</button>
-            <button class="tab" id="tab-tabla"     onclick="mostrarResultado('tabla')">Tabla Símb.</button>
-            <button class="tab" id="tab-plan"      onclick="mostrarResultado('plan')">Plan IA 🤖</button>
+            <button class="tab active" id="tab-codigo-gen" onclick="mostrarResultado('codigo-gen')"><i class="fa-solid fa-file-code"></i> Código .nut</button>
+            <button class="tab" id="tab-tokens" onclick="mostrarResultado('tokens')">Tokens</button>
+            <button class="tab" id="tab-arbol" onclick="mostrarResultado('arbol')">Árbol</button>
+            <button class="tab" id="tab-tabla" onclick="mostrarResultado('tabla')">Tabla Símb.</button>
+            <button class="tab" id="tab-plan" onclick="mostrarResultado('plan')">Plan IA <i class="fa-solid fa-wand-magic-sparkles"></i></button>
           </div>
         </div>
 
-        <!-- Código generado -->
         <div class="results-wrapper" id="panel-codigo-gen">
           <div class="empty-state" id="empty-codigo-gen">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <i class="fa-solid fa-code empty-icon"></i>
             <p>Llena el formulario para ver el código generado</p>
           </div>
           <div id="codigo-gen-contenido" style="display:none">
             <div class="codigo-gen-header">
               <span>Código .nut generado automáticamente</span>
-              <button class="btn-ghost" onclick="copiarCodigo()">📋 Copiar</button>
+              <button class="btn-ghost" onclick="copiarCodigo()"><i class="fa-regular fa-copy"></i> Copiar</button>
             </div>
             <pre class="codigo-gen-pre" id="codigo-gen-pre"></pre>
           </div>
         </div>
 
-        <!-- Tokens -->
         <div class="results-wrapper" id="panel-tokens" style="display:none">
           <div class="empty-state" id="empty-tokens"><p>Los tokens aparecen tras el análisis</p></div>
           <table class="token-table" id="token-table" style="display:none">
@@ -240,19 +248,16 @@
           </table>
         </div>
 
-        <!-- Árbol -->
         <div class="results-wrapper" id="panel-arbol" style="display:none">
           <div class="empty-state" id="empty-arbol"><p>El árbol aparece cuando el programa es sintácticamente válido</p></div>
           <pre class="arbol-pre" id="arbol-pre" style="display:none"></pre>
         </div>
 
-        <!-- Tabla símbolos -->
         <div class="results-wrapper" id="panel-tabla" style="display:none">
           <div class="empty-state" id="empty-tabla"><p>La tabla aparece cuando el análisis semántico es exitoso</p></div>
           <div class="tabla-simbolos" id="tabla-contenido" style="display:none"></div>
         </div>
 
-        <!-- Plan IA -->
         <div class="results-wrapper" id="panel-plan" style="display:none">
           <div class="empty-state" id="empty-plan"><p>El plan se genera cuando el análisis semántico es exitoso</p></div>
           <div id="plan-listo" style="display:none">
@@ -262,17 +267,22 @@
       </section>
     </div>
 
-    <!-- Paneles de error -->
     <section class="error-panel" id="error-lex" style="display:none">
-      <div class="panel-header error-header"><span class="panel-title">⚠ Errores léxicos</span><span class="error-count" id="cnt-lex"></span></div>
+      <div class="panel-header error-header">
+        <span class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Errores léxicos</span>
+        <span class="error-count" id="cnt-lex"></span>
+      </div>
       <table class="token-table"><thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead><tbody id="body-lex"></tbody></table>
     </section>
     <section class="error-panel error-sint" id="error-sint" style="display:none">
-      <div class="panel-header error-header"><span class="panel-title">⚠ Error sintáctico</span></div>
+      <div class="panel-header error-header"><span class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Error sintáctico</span></div>
       <div class="error-sint-body" id="body-sint"></div>
     </section>
     <section class="error-panel error-sint" id="error-sem" style="display:none">
-      <div class="panel-header error-header"><span class="panel-title">⚠ Error semántico</span><span class="error-count" id="cnt-sem"></span></div>
+      <div class="panel-header error-header">
+        <span class="panel-title"><i class="fa-solid fa-triangle-exclamation"></i> Error semántico</span>
+        <span class="error-count" id="cnt-sem"></span>
+      </div>
       <div class="error-sint-body" id="body-sem"></div>
     </section>
   </main>
