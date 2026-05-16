@@ -8,43 +8,27 @@
 </head>
 <body>
 
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <span class="brand-icon">🦦</span>
       <div><div class="brand-name">Vitally</div><div class="brand-sub">Compilador de Nutrias</div></div>
     </div>
     <nav class="sidebar-nav">
-      <div class="nav-section">ANÁLISIS</div>
-      <a href="#" class="nav-item active" onclick="cambiarTab('lexico');return false">
+      <div class="nav-section">MODO</div>
+      <a href="#" class="nav-item active" id="nav-formulario" onclick="setModo('formulario');return false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="14" y2="14"/></svg>
+        Modo Fácil
+      </a>
+      <a href="#" class="nav-item" id="nav-codigo" onclick="setModo('codigo');return false">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        Léxico
+        Modo Experto
       </a>
-      <a href="#" class="nav-item" onclick="cambiarTab('sintactico');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        Sintáctico
-      </a>
-      <a href="#" class="nav-item" onclick="cambiarTab('semantico');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Semántico
-      </a>
-      <a href="#" class="nav-item" onclick="cambiarTab('plan');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        Plan IA
-      </a>
-
-      <div class="nav-section" style="margin-top:16px">HERRAMIENTAS</div>
-      <a href="#" class="nav-item" onclick="cargarEjemplo('valido');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Ejemplo válido
-      </a>
-      <a href="#" class="nav-item" onclick="cargarEjemplo('errores');return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Ejemplo con errores
-      </a>
-      <a href="#" class="nav-item" onclick="limpiar();return false">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-        Limpiar
-      </a>
+      <div class="nav-section" style="margin-top:16px">FASES</div>
+      <a href="#" class="nav-item" onclick="mostrarResultado('tokens');return false">Fase 1 — Tokens</a>
+      <a href="#" class="nav-item" onclick="mostrarResultado('arbol');return false">Fase 2 — Árbol</a>
+      <a href="#" class="nav-item" onclick="mostrarResultado('tabla');return false">Fase 3 — Semántico</a>
+      <a href="#" class="nav-item" onclick="mostrarResultado('plan');return false">Fase 4 — Plan IA</a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-badge">N</div>
@@ -52,146 +36,245 @@
     </div>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
     <header class="topbar">
       <div>
-        <h1 class="page-title" id="page-title">Compilador de Nutrias</h1>
-        <p class="page-sub" id="page-sub">Análisis en tiempo real · Fases 1–4</p>
+        <h1 class="page-title" id="page-title">Modo Fácil — Formulario de Paciente</h1>
+        <p class="page-sub">Llena el formulario y el compilador hace el resto</p>
       </div>
-      <div class="status-pill" id="status-pill">
-        <span class="status-dot" id="status-dot"></span>
-        <span id="status-text">Esperando...</span>
+      <div class="topbar-right">
+        <div class="status-pill">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Esperando...</span>
+        </div>
       </div>
     </header>
 
-    <section class="stats-row" id="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-        <div><div class="stat-label">Tokens</div><div class="stat-value" id="stat-tokens">0</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div><div class="stat-label">Fase activa</div><div class="stat-value" id="stat-fase">—</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" id="stat-err-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-        <div><div class="stat-label">Errores</div><div class="stat-value" id="stat-errores">0</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" id="stat-estado-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div><div class="stat-label">Estado</div><div class="stat-value" id="stat-estado">—</div></div>
-      </div>
+    <!-- STATS -->
+    <section class="stats-row">
+      <div class="stat-card"><div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div><div class="stat-label">Tokens</div><div class="stat-value" id="stat-tokens">0</div></div></div>
+      <div class="stat-card"><div class="stat-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="stat-label">Fase activa</div><div class="stat-value" id="stat-fase">—</div></div></div>
+      <div class="stat-card"><div class="stat-icon" id="stat-err-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div><div class="stat-label">Errores</div><div class="stat-value" id="stat-errores">0</div></div></div>
+      <div class="stat-card"><div class="stat-icon" id="stat-estado-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="stat-label">Estado</div><div class="stat-value" id="stat-estado">—</div></div></div>
     </section>
 
-    <div class="workspace">
-      <!-- Editor -->
-      <section class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Código fuente (.nut)</span>
-          <span class="hint-text">Análisis automático en tiempo real</span>
+    <!-- WORKSPACE -->
+    <div class="workspace" id="workspace">
+
+      <!-- PANEL IZQUIERDO: Formulario o Editor -->
+      <section class="panel" id="panel-izq">
+
+        <!-- MODO FÁCIL: Formulario -->
+        <div id="modo-formulario">
+          <div class="panel-header">
+            <span class="panel-title">📋 Datos del Paciente</span>
+            <div class="panel-actions">
+              <button class="btn-ghost" onclick="cargarEjemplo()">Ejemplo</button>
+              <button class="btn-ghost" onclick="limpiarFormulario()">Limpiar</button>
+            </div>
+          </div>
+          <div class="form-scroll">
+            <!-- Datos básicos -->
+            <div class="form-section">
+              <div class="form-section-title">👤 Información Personal</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nombre del paciente *</label>
+                  <input type="text" id="f-nombre" placeholder="Ej: Sofia_Garcia" oninput="generarCodigo()">
+                  <span class="form-hint">Sin espacios, usa guión bajo</span>
+                </div>
+              </div>
+              <div class="form-row two-cols">
+                <div class="form-group">
+                  <label>Edad (años) *</label>
+                  <input type="number" id="f-edad" min="1" max="120" placeholder="25" oninput="generarCodigo()">
+                </div>
+                <div class="form-group">
+                  <label>Peso (kg) *</label>
+                  <input type="number" id="f-peso" min="1" max="700" step="0.1" placeholder="65.5" oninput="generarCodigo()">
+                </div>
+              </div>
+            </div>
+
+            <!-- Objetivo y nivel -->
+            <div class="form-section">
+              <div class="form-section-title">🎯 Objetivo y Nivel</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Objetivo principal *</label>
+                  <select id="f-objetivo" onchange="generarCodigo()">
+                    <option value="">-- Selecciona --</option>
+                    <option value="bajar_grasa">Bajar grasa corporal</option>
+                    <option value="ganar_musculo">Ganar masa muscular</option>
+                    <option value="tonificar">Tonificar</option>
+                    <option value="rehabilitacion">Rehabilitación</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="mejorar_resistencia">Mejorar resistencia</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nivel de condición física</label>
+                  <div class="radio-group">
+                    <label class="radio-opt"><input type="radio" name="nivel" value="principiante" onchange="generarCodigo()"> Principiante</label>
+                    <label class="radio-opt"><input type="radio" name="nivel" value="intermedio" checked onchange="generarCodigo()"> Intermedio</label>
+                    <label class="radio-opt"><input type="radio" name="nivel" value="avanzado" onchange="generarCodigo()"> Avanzado</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Restricciones -->
+            <div class="form-section">
+              <div class="form-section-title">⚕️ Restricciones Médicas</div>
+              <div class="restricciones-grid">
+                <label class="check-opt"><input type="checkbox" value="lumbar" onchange="generarCodigo()"> Zona lumbar</label>
+                <label class="check-opt"><input type="checkbox" value="rodilla" onchange="generarCodigo()"> Rodilla</label>
+                <label class="check-opt"><input type="checkbox" value="hombro" onchange="generarCodigo()"> Hombro</label>
+                <label class="check-opt"><input type="checkbox" value="presion_alta" onchange="generarCodigo()"> Presión alta</label>
+                <label class="check-opt"><input type="checkbox" value="diabetes" onchange="generarCodigo()"> Diabetes</label>
+                <label class="check-opt"><input type="checkbox" value="cervical" onchange="generarCodigo()"> Cervical</label>
+              </div>
+              <div class="form-group" style="margin-top:8px">
+                <input type="text" id="f-restriccion-custom" placeholder="Otra restricción (sin espacios)..." oninput="generarCodigo()">
+              </div>
+            </div>
+
+            <!-- Tipo de ejercicios -->
+            <div class="form-section">
+              <div class="form-section-title">💪 Tipos de Ejercicio</div>
+              <div class="restricciones-grid">
+                <label class="check-opt"><input type="checkbox" value="cardio" onchange="generarCodigo()" checked> Cardio</label>
+                <label class="check-opt"><input type="checkbox" value="fuerza" onchange="generarCodigo()" checked> Fuerza</label>
+                <label class="check-opt"><input type="checkbox" value="flexibilidad" onchange="generarCodigo()"> Flexibilidad</label>
+                <label class="check-opt"><input type="checkbox" value="funcional" onchange="generarCodigo()"> Funcional</label>
+                <label class="check-opt"><input type="checkbox" value="yoga" onchange="generarCodigo()"> Yoga</label>
+                <label class="check-opt"><input type="checkbox" value="natacion" onchange="generarCodigo()"> Natación</label>
+              </div>
+            </div>
+
+            <!-- Dieta -->
+            <div class="form-section">
+              <div class="form-section-title">🥗 Plan de Alimentación</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Tipo de dieta</label>
+                  <select id="f-dieta" onchange="generarCodigo()">
+                    <option value="">-- Sin plan de dieta --</option>
+                    <option value="dieta_proteica">Alta en proteínas</option>
+                    <option value="dieta_baja_calorias">Baja en calorías</option>
+                    <option value="dieta_antiinflamatoria">Antiinflamatoria</option>
+                    <option value="dieta_equilibrada">Equilibrada</option>
+                    <option value="dieta_vegana">Vegana</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-generar-plan" id="btn-generar" onclick="generarPlan()">
+              🤖 Generar Plan Clínico con IA
+            </button>
+          </div>
         </div>
-        <div class="editor-wrapper">
-          <div class="line-numbers" id="line-numbers">1</div>
-          <textarea id="editor" class="editor"
-            placeholder="INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;  PESO: 65.5;&#10;  OBJETIVO: bajar_grasa;&#10;  IMC;&#10;&#10;  RUTINA: mi_rutina;&#10;    ACCION: flexiones * 10;&#10;  FIN&#10;&#10;  IMPRIMIR mi_rutina;&#10;FIN"
-            spellcheck="false"
-            oninput="onEditorInput()"
-            onscroll="sincronizarScroll()"></textarea>
+
+        <!-- MODO EXPERTO: Editor -->
+        <div id="modo-codigo" style="display:none; height:100%; display:none; flex-direction:column">
+          <div class="panel-header">
+            <span class="panel-title">Código fuente (.nut)</span>
+            <div class="panel-actions">
+              <button class="btn-ghost" onclick="cargarEjemploEditor('valido')">Ejemplo válido</button>
+              <button class="btn-ghost" onclick="cargarEjemploEditor('error')">Con error</button>
+              <button class="btn-ghost" onclick="limpiarEditor()">Limpiar</button>
+            </div>
+          </div>
+          <div class="editor-wrapper">
+            <div class="line-numbers" id="line-numbers">1</div>
+            <textarea id="editor" class="editor"
+              placeholder="INICIO&#10;  PACIENTE: Sofia;&#10;  EDAD: 25;&#10;  PESO: 65.5;&#10;FIN"
+              spellcheck="false"
+              oninput="onEditorInput()"
+              onscroll="sincronizarScroll()"></textarea>
+          </div>
+          <div class="editor-footer">
+            <span class="hint-text">Análisis automático en tiempo real · Ctrl+Enter para forzar</span>
+            <button class="btn-generar-small" onclick="generarPlan()">🤖 Generar Plan</button>
+          </div>
         </div>
       </section>
 
-      <!-- Panel resultados con tabs -->
-      <section class="panel">
+      <!-- PANEL DERECHO: Código generado + Resultados -->
+      <section class="panel" id="panel-der">
         <div class="panel-header">
           <div class="tab-bar">
-            <button class="tab active" id="tab-tokens"    onclick="mostrarPanel('tokens')">Tokens</button>
-            <button class="tab"        id="tab-arbol-txt" onclick="mostrarPanel('arbol-txt')">Árbol</button>
-            <button class="tab"        id="tab-tabla"     onclick="mostrarPanel('tabla')">Tabla Símb.</button>
-            <button class="tab"        id="tab-plan"      onclick="mostrarPanel('plan')">Plan IA</button>
+            <button class="tab active" id="tab-codigo-gen" onclick="mostrarResultado('codigo-gen')">Código .nut</button>
+            <button class="tab" id="tab-tokens"    onclick="mostrarResultado('tokens')">Tokens</button>
+            <button class="tab" id="tab-arbol"     onclick="mostrarResultado('arbol')">Árbol</button>
+            <button class="tab" id="tab-tabla"     onclick="mostrarResultado('tabla')">Tabla Símb.</button>
+            <button class="tab" id="tab-plan"      onclick="mostrarResultado('plan')">Plan IA 🤖</button>
           </div>
-          <div class="leyenda" id="leyenda-tokens">
-            <span class="badge reservada">Reservada</span>
-            <span class="badge identificador">ID</span>
-            <span class="badge numero">Num</span>
-            <span class="badge operador">Op</span>
+        </div>
+
+        <!-- Código generado -->
+        <div class="results-wrapper" id="panel-codigo-gen">
+          <div class="empty-state" id="empty-codigo-gen">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <p>Llena el formulario para ver el código generado</p>
+          </div>
+          <div id="codigo-gen-contenido" style="display:none">
+            <div class="codigo-gen-header">
+              <span>Código .nut generado automáticamente</span>
+              <button class="btn-ghost" onclick="copiarCodigo()">📋 Copiar</button>
+            </div>
+            <pre class="codigo-gen-pre" id="codigo-gen-pre"></pre>
           </div>
         </div>
 
         <!-- Tokens -->
-        <div class="results-wrapper" id="panel-tokens">
-          <div class="empty-state" id="empty-tokens">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            <p>Empieza a escribir código .nut</p>
-          </div>
+        <div class="results-wrapper" id="panel-tokens" style="display:none">
+          <div class="empty-state" id="empty-tokens"><p>Los tokens aparecen tras el análisis</p></div>
           <table class="token-table" id="token-table" style="display:none">
             <thead><tr><th>#</th><th>Lexema</th><th>Token</th><th>L</th><th>C</th></tr></thead>
             <tbody id="token-body"></tbody>
           </table>
         </div>
 
-        <!-- Árbol texto -->
-        <div class="results-wrapper" id="panel-arbol-txt" style="display:none">
-          <div class="empty-state" id="empty-arbol">
-            <p>El árbol aparece cuando el programa es sintácticamente válido</p>
-          </div>
+        <!-- Árbol -->
+        <div class="results-wrapper" id="panel-arbol" style="display:none">
+          <div class="empty-state" id="empty-arbol"><p>El árbol aparece cuando el programa es sintácticamente válido</p></div>
           <pre class="arbol-pre" id="arbol-pre" style="display:none"></pre>
         </div>
 
-        <!-- Tabla de símbolos -->
+        <!-- Tabla símbolos -->
         <div class="results-wrapper" id="panel-tabla" style="display:none">
-          <div class="empty-state" id="empty-tabla">
-            <p>La tabla aparece cuando el análisis semántico es exitoso</p>
-          </div>
-          <div class="tabla-simbolos" id="tabla-simbolos-contenido" style="display:none"></div>
+          <div class="empty-state" id="empty-tabla"><p>La tabla aparece cuando el análisis semántico es exitoso</p></div>
+          <div class="tabla-simbolos" id="tabla-contenido" style="display:none"></div>
         </div>
 
         <!-- Plan IA -->
         <div class="results-wrapper" id="panel-plan" style="display:none">
-          <div class="plan-wrap" id="plan-contenido">
-            <div class="empty-state" id="empty-plan">
-              <p>El plan se genera cuando el análisis semántico es exitoso</p>
-            </div>
-            <div id="plan-listo" style="display:none">
-              <button class="btn-generar" id="btn-generar" onclick="generarPlan()">
-                Generar Plan Clínico con Gemini
-              </button>
-              <div id="plan-resultado"></div>
-            </div>
+          <div class="empty-state" id="empty-plan"><p>El plan se genera cuando el análisis semántico es exitoso</p></div>
+          <div id="plan-listo" style="display:none">
+            <div id="plan-resultado" style="padding:16px"></div>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- Error panels — unificados al final, sin repetición -->
-    <div id="error-zone">
-      <section class="error-panel" id="error-panel-lex" style="display:none">
-        <div class="panel-header error-header">
-          <span class="panel-title">⚠ Errores léxicos</span>
-          <span class="error-count" id="error-count-lex"></span>
-        </div>
-        <table class="token-table">
-          <thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead>
-          <tbody id="error-body-lex"></tbody>
-        </table>
-      </section>
-
-      <section class="error-panel error-sint" id="error-panel-sint" style="display:none">
-        <div class="panel-header error-header">
-          <span class="panel-title">⚠ Error sintáctico</span>
-          <span class="error-count" id="error-sint-fase">Fase 2</span>
-        </div>
-        <div class="error-sint-body" id="error-sint-body"></div>
-      </section>
-
-      <section class="error-panel error-sint" id="error-panel-sem" style="display:none">
-        <div class="panel-header error-header">
-          <span class="panel-title">⚠ Error semántico</span>
-          <span class="error-count" id="error-sem-code">Fase 3</span>
-        </div>
-        <div class="error-sint-body" id="error-sem-body"></div>
-      </section>
-    </div>
-
+    <!-- Paneles de error -->
+    <section class="error-panel" id="error-lex" style="display:none">
+      <div class="panel-header error-header"><span class="panel-title">⚠ Errores léxicos</span><span class="error-count" id="cnt-lex"></span></div>
+      <table class="token-table"><thead><tr><th>Lexema</th><th>Línea</th><th>Col</th><th>Descripción</th></tr></thead><tbody id="body-lex"></tbody></table>
+    </section>
+    <section class="error-panel error-sint" id="error-sint" style="display:none">
+      <div class="panel-header error-header"><span class="panel-title">⚠ Error sintáctico</span></div>
+      <div class="error-sint-body" id="body-sint"></div>
+    </section>
+    <section class="error-panel error-sint" id="error-sem" style="display:none">
+      <div class="panel-header error-header"><span class="panel-title">⚠ Error semántico</span><span class="error-count" id="cnt-sem"></span></div>
+      <div class="error-sint-body" id="body-sem"></div>
+    </section>
   </main>
 
   <script src="/static/css/app.js"></script>
